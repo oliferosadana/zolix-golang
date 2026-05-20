@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tracking Order - Zolix</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body class="tracking-body">
+    <main class="tracking-page">
+      <header class="tracking-header">
+        <div class="brand">
+          <div class="brand-mark">ZOLIX</div>
+          <div class="brand-line">SHOE CARE</div>
+        </div>
+        <a class="secondary-button" id="whatsapp-link" href="#">WhatsApp</a>
+      </header>
+
+      <section class="tracking-hero">
+        <div>
+          <span class="tracking-eyebrow">Tracking Order</span>
+          <h1 id="invoice-title">Memuat...</h1>
+          <p id="customer-line">Mohon tunggu sebentar.</p>
+        </div>
+        <div id="tracking-status"></div>
+      </section>
+
+      <section class="tracking-grid">
+        <article class="panel tracking-card">
+          <div class="panel-head">
+            <div>
+              <h2>Timeline Progress</h2>
+              <p>Status pengerjaan sepatu Anda.</p>
+            </div>
+          </div>
+          <div class="timeline" id="tracking-timeline"></div>
+        </article>
+
+        <article class="panel tracking-card">
+          <div class="panel-head">
+            <div>
+              <h2>Ringkasan Pembayaran</h2>
+              <p>Detail layanan dan total invoice.</p>
+            </div>
+          </div>
+          <div class="invoice-summary" id="invoice-summary"></div>
+        </article>
+      </section>
+
+      <section class="panel tracking-card">
+        <div class="panel-head">
+          <div>
+            <h2>Before / After</h2>
+            <p>Dokumentasi pengerjaan dari ZOLIX.</p>
+          </div>
+        </div>
+        <div class="media-grid tracking-media" id="tracking-media"></div>
+      </section>
+    </main>
+
+    <script src="/static/tracking.js"></script>
+  </body>
+</html>

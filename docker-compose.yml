@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zolix-app
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      JWT_SECRET: "change-this-zolix-secret"
+      UPLOAD_DIR: "/app/uploads"
+      PUBLIC_BASE_URL: "http://192.168.18.17:8090"
+      WAHA_BASE_URL: "http://waha:3000"
+      WAHA_API_KEY: "f6452cfdfcc7453fb4519468c290b019"
+      WAHA_SESSION: "default"
+      STORE: postgres
+      DATABASE_URL: postgres://zolix:zolix@postgres:5432/zolix?sslmode=disable
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./assets:/app/assets:ro
+      - /data/zolix/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - waha_default
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: zolix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zolix
+      POSTGRES_PASSWORD: zolix
+      POSTGRES_DB: zolix
+    volumes:
+      - /data/zolix/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zolix -d zolix"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
+
+networks:
+  waha_default:
+    external: true

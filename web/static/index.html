@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zolix Shoe Care</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <section class="login-screen" id="login-screen">
+      <form class="login-card" id="login-form">
+        <div class="brand">
+          <div class="brand-mark">ZOLIX</div>
+          <div class="brand-line">SHOE CARE</div>
+        </div>
+        <div>
+          <h1>Masuk Dashboard</h1>
+          <p>Gunakan akun admin untuk mengelola order dan pelanggan.</p>
+        </div>
+        <label>Email<input name="email" type="email" value="admin@zolix.test" required></label>
+        <label>Password<input name="password" type="password" value="admin123" required></label>
+        <button class="primary-button" type="submit">Masuk</button>
+        <small id="login-error"></small>
+      </form>
+    </section>
+    <div id="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">ZOLIX</div>
+          <div class="brand-line">SHOE CARE</div>
+          <div class="brand-caption">CLEAN YOUR KICKS, BOOST YOUR STYLE</div>
+        </div>
+
+        <nav class="nav" aria-label="Menu utama">
+          <button class="nav-item active" data-view="dashboard"><span>⌂</span>Dashboard</button>
+          <button class="nav-item" data-view="orders"><span>▤</span>List Order</button>
+          <button class="nav-item" data-view="create"><span>＋</span>Tambah Order</button>
+          <button class="nav-item" data-view="schedule"><span>□</span>Jadwal</button>
+          <button class="nav-item" data-view="customers"><span>♙</span>Pelanggan</button>
+          <button class="nav-item" data-view="services"><span>◇</span>Layanan</button>
+          <button class="nav-item" data-view="settings"><span>⚙</span>Pengaturan</button>
+        </nav>
+
+        <div class="promo">
+          <div>
+            <strong>Kualitas Terbaik</strong>
+            <b>Untuk Sepatu Anda!</b>
+            <span>Bersih maksimal, tampil optimal.</span>
+          </div>
+          <div class="shoe-graphic"></div>
+        </div>
+
+        <div class="profile">
+          <div class="avatar"></div>
+          <div>
+            <strong>Zolix Admin</strong>
+            <span>Super Admin</span>
+          </div>
+          <span class="chevron">⌄</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="mobile-brand">ZOLIX</div>
+          <button class="secondary-button logout-button" id="logout-button">Logout</button>
+          <button class="icon-button" aria-label="Notifikasi"><span>♧</span><i></i></button>
+          <div class="date-card">
+            <span>⊞</span>
+            <div>
+              <strong>18 Mei 2025</strong>
+              <small>10:30 WIB</small>
+            </div>
+            <em>⌄</em>
+          </div>
+        </header>
+
+        <section class="hero-row">
+          <div>
+            <h1 id="page-title">Dashboard</h1>
+            <p id="page-subtitle">Ringkasan operasional ZOLIX Shoe Care hari ini.</p>
+          </div>
+          <div class="toolbar">
+            <label class="search">
+              <span>⌕</span>
+              <input id="search-input" type="search" placeholder="Cari no. nota, nama, no. HP, layanan...">
+            </label>
+            <button class="secondary-button" id="filter-button">▽ Filter</button>
+            <button class="primary-button" data-view="create">⊕ Tambah Order</button>
+          </div>
+        </section>
+
+        <section id="dashboard-view" class="view active-view">
+          <div class="stats-grid" id="stats-grid"></div>
+          <div class="dashboard-grid">
+            <article class="panel wide">
+              <div class="panel-head">
+                <div>
+                  <h2>List Order</h2>
+                  <p>Order terbaru dan status pengerjaan.</p>
+                </div>
+                <button class="link-button" data-view="orders">Lihat semua</button>
+              </div>
+              <div class="tabs" id="status-tabs"></div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>No. Nota</th>
+                      <th>Pelanggan</th>
+                      <th>Layanan</th>
+                      <th>Tanggal Order</th>
+                      <th>Estimasi</th>
+                      <th>Status</th>
+                      <th>Total</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-table"></tbody>
+                </table>
+              </div>
+              <div class="table-footer">
+                <span id="table-count">Menampilkan 0 order</span>
+                <div class="pagination">
+                  <button disabled>‹</button><button class="active">1</button><button>2</button><button>3</button><span>...</span><button>9</button><button>›</button>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Realtime Activity</h2>
+                  <p>Simulasi event WebSocket.</p>
+                </div>
+              </div>
+              <div class="activity-list" id="activity-list"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="orders-view" class="view">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Manajemen Order</h2>
+                <p>Filter, cek invoice, dan bagikan update WhatsApp.</p>
+              </div>
+            </div>
+            <div class="tabs" id="orders-status-tabs"></div>
+            <div class="cards-list" id="orders-list"></div>
+          </div>
+        </section>
+
+        <section id="create-view" class="view">
+          <div class="panel form-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Tambah Order</h2>
+                <p>Input order multi item, pembayaran, estimasi selesai, dan catatan.</p>
+              </div>
+            </div>
+            <form id="order-form" class="order-form">
+              <div class="field-grid">
+                <label>Nama pelanggan<input name="customer_name" required placeholder="Contoh: Nadia Putri"></label>
+                <label>Nomor WhatsApp<input name="customer_phone" required placeholder="0812-0000-0000"></label>
+                <label>Jenis layanan<select name="service" id="service-select"></select></label>
+                <label>Nama sepatu<input name="shoe_name" placeholder="Nike Dunk Low"></label>
+                <label>Jumlah item<input name="qty" type="number" value="1" min="1"></label>
+                <label>Harga<input name="price" type="number" value="65000" min="0"></label>
+                <label>Metode pembayaran<select name="payment_method"><option>Cash</option><option>Transfer</option><option>QRIS</option></select></label>
+                <label>Status pembayaran<select name="payment_status"><option>Belum Bayar</option><option>DP</option><option>Lunas</option></select></label>
+              </div>
+              <label>Catatan<textarea name="notes" rows="4" placeholder="Catatan noda, bahan, request customer..."></textarea></label>
+              <div class="upload-zone">
+                <strong>Upload Before & After</strong>
+                <span>Drop area demo untuk foto depan, belakang, samping, sol bawah, dan detail noda.</span>
+              </div>
+              <button class="primary-button" type="submit">Simpan Order</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="customers-view" class="view">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Pelanggan</h2><p>Database customer dan nomor WhatsApp.</p></div></div>
+            <div class="customer-grid" id="customer-grid"></div>
+          </div>
+        </section>
+
+        <section id="services-view" class="view">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Layanan</h2><p>Harga, estimasi, dan status layanan.</p></div></div>
+            <div class="service-grid" id="service-grid"></div>
+          </div>
+        </section>
+
+        <section id="schedule-view" class="view">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Jadwal Pickup</h2><p>Order yang selesai dan perlu diambil pelanggan.</p></div></div>
+            <div class="cards-list" id="schedule-list"></div>
+          </div>
+        </section>
+
+        <section id="settings-view" class="view">
+          <div class="panel">
+            <div class="panel-head"><div><h2>Pengaturan</h2><p>Konfigurasi integrasi produksi yang disiapkan oleh PRD.</p></div></div>
+            <div class="settings-grid">
+              <div><strong>WAHA API</strong><span>Webhook dan template WhatsApp automation.</span></div>
+              <div><strong>MinIO / Supabase</strong><span>Storage before-after dan bukti pembayaran.</span></div>
+              <div><strong>PostgreSQL</strong><span>Persistensi data order, customer, service, media.</span></div>
+              <div><strong>JWT & Role</strong><span>Super Admin, Staff, Cleaner.</span></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="drawer" id="drawer" aria-hidden="true">
+        <div class="drawer-backdrop" id="drawer-close"></div>
+        <div class="drawer-panel">
+          <button class="drawer-x" id="drawer-x">×</button>
+          <div id="drawer-content"></div>
+        </div>
+      </aside>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

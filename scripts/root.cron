@@ -1,0 +1,2 @@
+0 3 * * * /usr/local/bin/auto-clean.sh
+15 2 * * * /data/zolix/scripts/backup-postgres.sh >> /data/zolix/backups/backup.log 2>&1
