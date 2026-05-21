@@ -12,8 +12,15 @@ mkdir -p "$BACKUP_DIR"
 
 timestamp="$(date +%Y%m%d-%H%M%S)"
 target="$BACKUP_DIR/zolix-$timestamp.sql.gz"
+tmp="$BACKUP_DIR/zolix-$timestamp.sql"
 
-pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" | gzip > "$target"
+cleanup() {
+	rm -f "$tmp"
+}
+trap cleanup EXIT
+
+pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" > "$tmp"
+gzip -c "$tmp" > "$target"
 
 find "$BACKUP_DIR" -type f -name 'zolix-*.sql.gz' -mtime +"$RETENTION_DAYS" -delete
 

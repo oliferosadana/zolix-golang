@@ -43,6 +43,7 @@ Izinkan koneksi hanya dari App Server:
 ```bash
 sudo sed -i "s/^#listen_addresses =.*/listen_addresses = '192.168.18.101'/" /etc/postgresql/*/main/postgresql.conf
 echo "host zolix_db zolix_user 192.168.18.100/32 scram-sha-256" | sudo tee -a /etc/postgresql/*/main/pg_hba.conf
+echo "host zolix_db zolix_user 192.168.18.101/32 scram-sha-256" | sudo tee -a /etc/postgresql/*/main/pg_hba.conf
 sudo systemctl restart postgresql
 ```
 
@@ -64,7 +65,7 @@ sudo chmod +x /data/zolix/scripts/backup-postgres-lxc.sh
 Buat file password PostgreSQL agar cron tidak meminta password:
 
 ```bash
-sudo sh -c 'echo "127.0.0.1:5432:zolix_db:zolix_user:ganti-password-kuat" > /root/.pgpass'
+sudo sh -c 'echo "192.168.18.101:5432:zolix_db:zolix_user:ganti-password-kuat" > /root/.pgpass'
 sudo chmod 600 /root/.pgpass
 ```
 
@@ -75,13 +76,13 @@ sudo crontab -e
 ```
 
 ```cron
-15 2 * * * POSTGRES_USER=zolix_user POSTGRES_DB=zolix_db /data/zolix/scripts/backup-postgres-lxc.sh >> /data/zolix/backups/backup.log 2>&1
+15 2 * * * POSTGRES_HOST=192.168.18.101 POSTGRES_USER=zolix_user POSTGRES_DB=zolix_db /data/zolix/scripts/backup-postgres-lxc.sh >> /data/zolix/backups/backup.log 2>&1
 ```
 
 Tes backup:
 
 ```bash
-sudo POSTGRES_USER=zolix_user POSTGRES_DB=zolix_db /data/zolix/scripts/backup-postgres-lxc.sh
+sudo POSTGRES_HOST=192.168.18.101 POSTGRES_USER=zolix_user POSTGRES_DB=zolix_db /data/zolix/scripts/backup-postgres-lxc.sh
 ls -lh /data/zolix/backups
 ```
 
