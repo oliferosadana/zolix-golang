@@ -7,6 +7,7 @@
   --soft: #f8f9fa;
   --card: #ffffff;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  --sidebar-width: 246px;
 }
 
 * {
@@ -15,7 +16,7 @@
 
 body {
   margin: 0;
-  background: #ffffff;
+  background: #f7f8fa;
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -73,9 +74,11 @@ button {
 }
 
 .sidebar {
-  width: 246px;
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
   min-height: 100vh;
   border-right: 1px solid var(--border);
+  background: #ffffff;
   padding: 34px 16px 24px;
   display: flex;
   flex-direction: column;
@@ -213,6 +216,7 @@ button {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
+  min-width: 0;
 }
 
 .avatar {
@@ -225,6 +229,9 @@ button {
 
 .profile strong, .profile span {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile strong {
@@ -243,16 +250,18 @@ button {
 
 .main {
   flex: 1;
-  padding: 24px 18px 20px 28px;
+  padding: 24px 24px 28px 28px;
   min-width: 0;
+  max-width: calc(100vw - var(--sidebar-width));
 }
 
 .topbar {
-  height: 48px;
+  min-height: 48px;
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 18px;
+  flex-wrap: wrap;
 }
 
 .logout-button {
@@ -337,6 +346,12 @@ button {
   align-items: flex-end;
   justify-content: space-between;
   gap: 22px;
+  min-width: 0;
+}
+
+.hero-row > div:first-child {
+  min-width: 220px;
+  flex: 1 1 300px;
 }
 
 h1 {
@@ -359,6 +374,7 @@ p {
   justify-content: flex-end;
   flex-wrap: wrap;
   min-width: 0;
+  flex: 1 1 520px;
 }
 
 .search {
@@ -385,6 +401,11 @@ p {
   border: 1px solid var(--border);
   padding: 0 18px;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .primary-button {
@@ -417,7 +438,7 @@ p {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -431,6 +452,7 @@ p {
 
 .stat-card {
   padding: 18px;
+  min-width: 0;
 }
 
 .stat-card span {
@@ -443,8 +465,9 @@ p {
 .stat-card strong {
   display: block;
   margin-top: 8px;
-  font-size: 24px;
+  font-size: clamp(20px, 2vw, 24px);
   line-height: 30px;
+  overflow-wrap: anywhere;
 }
 
 .stat-card small {
@@ -454,8 +477,9 @@ p {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
   gap: 18px;
+  align-items: start;
 }
 
 .panel {
@@ -473,6 +497,13 @@ p {
   justify-content: space-between;
   align-items: center;
   gap: 18px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.panel-head > div {
+  min-width: 0;
+  flex: 1 1 240px;
 }
 
 .panel-head h2 {
@@ -481,14 +512,15 @@ p {
 }
 
 .tabs {
-  height: 58px;
+  min-height: 58px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
   padding: 0 16px;
   overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .tab {
@@ -499,6 +531,7 @@ p {
   align-items: center;
   gap: 8px;
   font-weight: 700;
+  font-size: 13px;
   white-space: nowrap;
   position: relative;
 }
@@ -534,7 +567,7 @@ table {
 }
 
 th, td {
-  padding: 14px 18px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: middle;
@@ -550,6 +583,7 @@ td strong {
   display: block;
   font-size: 14px;
   margin-bottom: 6px;
+  overflow-wrap: anywhere;
 }
 
 td small {
@@ -561,6 +595,7 @@ td small {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 }
 
 .shoe-thumb {
@@ -610,6 +645,7 @@ td small {
   line-height: 13px;
   font-weight: 900;
   text-align: center;
+  white-space: normal;
 }
 
 .badge.success { background: #dcfce7; color: #15803d; }
@@ -622,6 +658,7 @@ td small {
 .actions {
   display: flex;
   gap: 10px;
+  flex-wrap: nowrap;
 }
 
 .actions button {
@@ -636,15 +673,19 @@ td small {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0 0;
+  gap: 14px;
+  padding: 14px 20px;
   color: #4b5563;
   font-size: 12px;
+  flex-wrap: wrap;
 }
 
 .pagination {
   display: flex;
   gap: 10px;
   align-items: center;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .pagination button {
@@ -673,6 +714,7 @@ td small {
   border-radius: 8px;
   padding: 14px;
   background: #ffffff;
+  min-width: 0;
 }
 
 .activity-item strong {
@@ -694,13 +736,15 @@ td small {
 
 .order-card {
   display: grid;
-  grid-template-columns: minmax(190px, 1.4fr) minmax(160px, 1fr) 140px 130px 96px;
+  grid-template-columns: minmax(180px, 1.35fr) minmax(150px, 1fr) minmax(130px, 0.9fr) minmax(120px, auto) minmax(84px, auto);
   gap: 16px;
   align-items: center;
 }
 
 .order-card strong, .order-card span, .order-card small {
   display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .order-card small {
@@ -721,7 +765,7 @@ td small {
 
 .field-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 14px;
 }
 
@@ -732,6 +776,7 @@ label {
   color: #374151;
   font-size: 13px;
   font-weight: 700;
+  min-width: 0;
 }
 
 .toolbar .search {
@@ -781,6 +826,8 @@ input, select, textarea {
   padding: 0 14px;
   background: #ffffff;
   color: var(--text);
+  width: 100%;
+  min-width: 0;
 }
 
 textarea {
@@ -814,7 +861,7 @@ input:focus, select:focus, textarea:focus {
 .customer-grid, .service-grid, .settings-grid {
   padding: 20px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
 }
 
@@ -934,7 +981,7 @@ input:focus, select:focus, textarea:focus {
   border-radius: 10px;
   background: #fbfff0;
   display: grid;
-  grid-template-columns: 120px 1fr auto;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: end;
 }
@@ -1038,6 +1085,41 @@ input:focus, select:focus, textarea:focus {
   font-weight: 900;
 }
 
+@media (max-width: 1320px) {
+  .hero-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .toolbar .search {
+    max-width: 460px;
+  }
+}
+
+@media (max-width: 1240px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .order-card {
+    grid-template-columns: minmax(180px, 1.3fr) minmax(150px, 1fr) minmax(120px, 0.8fr);
+  }
+
+  .order-card .actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 1100px) {
   #app {
     display: block;
@@ -1049,6 +1131,7 @@ input:focus, select:focus, textarea:focus {
 
   .main {
     padding: 18px 16px 96px;
+    max-width: none;
   }
 
   .mobile-brand {
@@ -1060,8 +1143,13 @@ input:focus, select:focus, textarea:focus {
     flex-direction: column;
   }
 
-  .search, .primary-button, .secondary-button {
+  .toolbar .search,
+  .search,
+  .primary-button,
+  .secondary-button {
     width: 100%;
+    max-width: none;
+    min-width: 0;
   }
 
   .stats-grid, .dashboard-grid, .field-grid, .customer-grid, .service-grid, .settings-grid {
@@ -1070,6 +1158,7 @@ input:focus, select:focus, textarea:focus {
 
   .order-card {
     grid-template-columns: 1fr;
+    align-items: start;
   }
 
   .upload-form {
@@ -1089,5 +1178,116 @@ input:focus, select:focus, textarea:focus {
   .tracking-hero h1 {
     font-size: 28px;
     line-height: 34px;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .logout-button {
+    margin-left: auto;
+  }
+
+  .date-card {
+    width: 100%;
+    order: 3;
+  }
+
+  .hero-row {
+    margin-top: 18px;
+    gap: 16px;
+  }
+
+  h1 {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .panel-head {
+    padding: 16px;
+  }
+
+  .cards-list,
+  .customer-grid,
+  .service-grid,
+  .settings-grid,
+  .activity-list,
+  .order-form {
+    padding: 16px;
+  }
+
+  .tabs {
+    padding: 0 12px;
+  }
+
+  .table-footer {
+    padding: 12px 16px;
+  }
+
+  .pagination {
+    gap: 6px;
+  }
+
+  .drawer-panel {
+    padding: 22px 16px;
+  }
+
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 14px 12px 80px;
+  }
+
+  .mobile-brand {
+    font-size: 22px;
+  }
+
+  .icon-button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .primary-button,
+  .secondary-button,
+  .link-button,
+  .whatsapp {
+    min-width: 0;
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .panel-head .link-button {
+    width: auto;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button {
+    flex: 1 1 0;
+  }
+
+  .upload-zone {
+    padding: 14px;
+  }
+
+  .tracking-page {
+    padding: 18px 12px 32px;
+  }
+
+  .tracking-hero {
+    padding: 20px;
   }
 }
