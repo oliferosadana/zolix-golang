@@ -133,7 +133,7 @@ WAHA_API_KEY=isi-dengan-api-key-panjang
 WAHA_DASHBOARD_USERNAME=admin
 WAHA_DASHBOARD_PASSWORD=isi-dengan-password-dashboard-panjang
 WAHA_SESSION=default
-DATABASE_URL=postgres://zolix_user:ganti-password-kuat@192.168.18.101:5432/zolix_db?sslmode=disable
+DATABASE_URL=postgres://zolix_user:ganti-password-kuat@192.168.18.101:5432/zolix_db?sslmode=disable&client_encoding=UTF8
 ```
 
 Jalankan stack:
