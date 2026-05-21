@@ -10,13 +10,14 @@ RUN go mod download
 COPY cmd ./cmd
 COPY internal ./internal
 
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/zolix ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/zolix ./cmd/server \
+	&& chmod 755 /out/zolix
 
 FROM scratch
 
 WORKDIR /app
 
-COPY --from=builder /out/zolix /app/zolix
+COPY --from=builder --chmod=755 /out/zolix /app/zolix
 COPY web/static /app/web/static
 COPY assets /app/assets
 
