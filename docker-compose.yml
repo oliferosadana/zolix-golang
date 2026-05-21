@@ -1,4 +1,38 @@
 services:
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:2.14.0
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    environment:
+      TZ: "${TZ:-Asia/Makassar}"
+      DISABLE_IPV6: "true"
+    volumes:
+      - /data/nginx-proxy-manager/data:/data
+      - /data/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    networks:
+      - proxy
+
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: waha
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      WAHA_API_KEY: "${WAHA_API_KEY}"
+      WAHA_DASHBOARD_USERNAME: "${WAHA_DASHBOARD_USERNAME:-admin}"
+      WAHA_DASHBOARD_PASSWORD: "${WAHA_DASHBOARD_PASSWORD}"
+      WAHA_PRINT_QR: "false"
+      TZ: "${TZ:-Asia/Makassar}"
+    volumes:
+      - /data/waha:/app/.sessions
+    networks:
+      - proxy
+
   app:
     build:
       context: .
@@ -7,45 +41,24 @@ services:
     restart: unless-stopped
     environment:
       PORT: "8080"
-      JWT_SECRET: "change-this-zolix-secret"
+      JWT_SECRET: "${JWT_SECRET}"
       UPLOAD_DIR: "/app/uploads"
-      PUBLIC_BASE_URL: "http://192.168.18.17:8090"
+      PUBLIC_BASE_URL: "${PUBLIC_BASE_URL}"
       WAHA_BASE_URL: "http://waha:3000"
-      WAHA_API_KEY: "f6452cfdfcc7453fb4519468c290b019"
-      WAHA_SESSION: "default"
+      WAHA_API_KEY: "${WAHA_API_KEY}"
+      WAHA_SESSION: "${WAHA_SESSION:-default}"
       STORE: postgres
-      DATABASE_URL: postgres://zolix:zolix@postgres:5432/zolix?sslmode=disable
+      DATABASE_URL: "${DATABASE_URL}"
     ports:
       - "8090:8080"
     volumes:
       - ./assets:/app/assets:ro
       - /data/zolix/uploads:/app/uploads
     depends_on:
-      postgres:
-        condition: service_healthy
+      - waha
     networks:
-      - default
-      - waha_default
-
-  postgres:
-    image: postgres:16-alpine
-    container_name: zolix-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: zolix
-      POSTGRES_PASSWORD: zolix
-      POSTGRES_DB: zolix
-    volumes:
-      - /data/zolix/postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U zolix -d zolix"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-volumes:
-  postgres-data:
+      - proxy
 
 networks:
-  waha_default:
-    external: true
+  proxy:
+    name: zolix_proxy

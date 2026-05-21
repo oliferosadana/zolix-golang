@@ -1,5 +1,4 @@
 server.exe
 build/*
-!build/zolix-linux-arm64
 .env
 .git
