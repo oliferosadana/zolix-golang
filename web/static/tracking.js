@@ -1,14 +1,14 @@
 const trackingStatusMeta = {
-  "Diterima": ["info", "⊙ DITERIMA"],
-  "Cleaning": ["orange", "✺ PROSES"],
-  "Drying": ["orange", "✺ DRYING"],
-  "Finishing": ["orange", "✺ FINISHING"],
+  Diterima: ["info", "DITERIMA"],
+  Cleaning: ["orange", "PROSES"],
+  Drying: ["orange", "DRYING"],
+  Finishing: ["orange", "FINISHING"],
   "Ready Pickup": ["warning", "MENUNGGU DIAMBIL"],
-  "Completed": ["success", "✓ SELESAI"],
-  "Diambil": ["neutral", "▢ DIAMBIL"],
+  Completed: ["success", "SELESAI"],
+  Diambil: ["neutral", "DIAMBIL"],
   "Menunggu Diambil": ["warning", "MENUNGGU DIAMBIL"],
-  "Dibatalkan": ["danger", "⊗ DIBATALKAN"],
-  "Pending": ["neutral", "PENDING"],
+  Dibatalkan: ["danger", "DIBATALKAN"],
+  Pending: ["neutral", "PENDING"],
 };
 
 const trackingRupiah = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
@@ -22,15 +22,110 @@ function invoiceFromPath() {
   return decodeURIComponent(parts[parts.length - 1] || "");
 }
 
+function safeText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[char]));
+}
+
 function badge(status) {
-  const [name, label] = trackingStatusMeta[status] || ["neutral", status];
-  return `<span class="badge ${name}">${label}</span>`;
+  const [name, label] = trackingStatusMeta[status] || ["neutral", status || "PENDING"];
+  return `<span class="badge ${name}">${safeText(label)}</span>`;
 }
 
 function fmtDate(value) {
   const date = new Date(value);
-  if (date.getFullYear() < 2000) return "Menunggu update";
-  return `${trackingDate.format(date)} • ${trackingTime.format(date).replace(".", ":")} WIB`;
+  if (Number.isNaN(date.getTime()) || date.getFullYear() < 2000) return "Menunggu update";
+  return `${trackingDate.format(date)} - ${trackingTime.format(date).replace(".", ":")} WIB`;
+}
+
+function paymentClass(status) {
+  const normalized = String(status || "").toLowerCase();
+  if (normalized.includes("lunas") || normalized.includes("paid")) return "success";
+  if (normalized.includes("batal") || normalized.includes("gagal")) return "danger";
+  return "warning";
+}
+
+function renderOverview(order) {
+  document.querySelector("#tracking-overview").innerHTML = `
+    <div class="tracking-overview-item">
+      <span>Total Tagihan</span>
+      <strong>${trackingRupiah.format(order.total_price || 0)}</strong>
+    </div>
+    <div class="tracking-overview-item">
+      <span>Pembayaran</span>
+      <strong class="payment-state ${paymentClass(order.payment_status)}">${safeText(order.payment_status || "-")}</strong>
+    </div>
+    <div class="tracking-overview-item">
+      <span>Metode</span>
+      <strong>${safeText(order.payment_method || "-")}</strong>
+    </div>
+  `;
+}
+
+function renderInvoiceSummary(order) {
+  const itemRows = (order.items || []).map((item) => `
+    <div class="invoice-item">
+      <div>
+        <strong>${safeText(item.service || "Layanan")}</strong>
+        <span>${safeText(item.shoe_name || "Sepatu")} - Qty ${safeText(item.qty || 0)}</span>
+      </div>
+      <b>${trackingRupiah.format((item.price || 0) * (item.qty || 0))}</b>
+    </div>
+  `).join("");
+
+  document.querySelector("#invoice-summary").innerHTML = `
+    <div class="invoice-total-card">
+      <span>Total Invoice</span>
+      <strong>${trackingRupiah.format(order.total_price || 0)}</strong>
+    </div>
+    <div class="invoice-detail-list">
+      <div class="summary-row"><span>Invoice</span><strong>${safeText(order.invoice_number)}</strong></div>
+      <div class="summary-row"><span>Pelanggan</span><strong>${safeText(order.customer_name)}</strong></div>
+      <div class="summary-row"><span>Status pembayaran</span><strong>${safeText(order.payment_status || "-")}</strong></div>
+      <div class="summary-row"><span>Metode</span><strong>${safeText(order.payment_method || "-")}</strong></div>
+    </div>
+    <div class="invoice-items">
+      ${itemRows || `<p class="empty-state">Item layanan belum tersedia.</p>`}
+    </div>
+  `;
+}
+
+function renderTimeline(order) {
+  document.querySelector("#tracking-timeline").innerHTML = (order.timeline || []).map((step) => `
+    <div class="timeline-item ${step.done ? "done" : ""}">
+      <span class="dot"></span>
+      <div>
+        <strong>${safeText(step.label)}</strong>
+        <small>${step.done ? fmtDate(step.time) : "Menunggu update"}</small>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderMedia(order) {
+  const media = order.media && order.media.length ? order.media : [];
+  document.querySelector("#tracking-media").innerHTML = media.length
+    ? media.map((item) => `<figure><img src="${safeText(item.url)}" alt="${safeText(item.type)}"><figcaption>${safeText(item.type)}</figcaption></figure>`).join("")
+    : `<div class="empty-state">Foto before/after belum tersedia.</div>`;
+}
+
+function refreshOrderView(order) {
+  currentOrder = order;
+  document.title = `${order.invoice_number} - Zolix`;
+  document.querySelector("#invoice-title").textContent = order.invoice_number;
+  document.querySelector("#customer-line").textContent = `${order.customer_name} - ${order.customer_phone}`;
+  document.querySelector("#tracking-status").innerHTML = badge(order.status);
+  document.querySelector("#whatsapp-link").href = `https://wa.me/${String(order.customer_phone || "").replace(/\D/g, "")}`;
+  renderOverview(order);
+  renderTimeline(order);
+  renderInvoiceSummary(order);
+  renderSelfPayment(order);
+  renderMedia(order);
 }
 
 async function loadTracking() {
@@ -42,39 +137,12 @@ async function loadTracking() {
   if (!response.ok) {
     document.querySelector("#invoice-title").textContent = "Order tidak ditemukan";
     document.querySelector("#customer-line").textContent = "Periksa kembali nomor invoice Anda.";
+    document.querySelector("#tracking-status").innerHTML = badge("Dibatalkan");
+    document.querySelector("#tracking-overview").innerHTML = "";
     return;
   }
   if (configResponse.ok) paymentConfig = await configResponse.json();
-  const order = await response.json();
-  currentOrder = order;
-  document.title = `${order.invoice_number} - Zolix`;
-  document.querySelector("#invoice-title").textContent = order.invoice_number;
-  document.querySelector("#customer-line").textContent = `${order.customer_name} • ${order.customer_phone}`;
-  document.querySelector("#tracking-status").innerHTML = badge(order.status);
-  document.querySelector("#whatsapp-link").href = `https://wa.me/${order.customer_phone.replace(/\D/g, "")}`;
-
-  document.querySelector("#tracking-timeline").innerHTML = order.timeline.map((step) => `
-    <div class="timeline-item ${step.done ? "done" : ""}">
-      <span class="dot"></span>
-      <div>
-        <strong>${step.label}</strong>
-        <small>${step.done ? fmtDate(step.time) : "Menunggu update"}</small>
-      </div>
-    </div>
-  `).join("");
-
-  document.querySelector("#invoice-summary").innerHTML = `
-    <div class="summary-row"><span>Status pembayaran</span><strong>${order.payment_status}</strong></div>
-    <div class="summary-row"><span>Metode</span><strong>${order.payment_method}</strong></div>
-    ${order.items.map((item) => `<div class="summary-row"><span>${item.service} × ${item.qty}</span><strong>${trackingRupiah.format(item.price * item.qty)}</strong></div>`).join("")}
-    <div class="summary-row total"><span>Total</span><strong>${trackingRupiah.format(order.total_price)}</strong></div>
-  `;
-  renderSelfPayment(order);
-
-  const media = order.media && order.media.length ? order.media : [];
-  document.querySelector("#tracking-media").innerHTML = media.length
-    ? media.map((item) => `<figure><img src="${item.url}" alt="${item.type}"><figcaption>${item.type}</figcaption></figure>`).join("")
-    : `<p style="padding:0 20px 20px">Foto before/after belum tersedia.</p>`;
+  refreshOrderView(await response.json());
 }
 
 function renderSelfPayment(order) {
@@ -84,9 +152,9 @@ function renderSelfPayment(order) {
   const qrisPanel = order.payment_method === "QRIS" && (order.payment_qr_url || order.payment_qr_string) ? `
     <div class="self-payment-result">
       <strong>QRIS siap dibayar</strong>
-      <span>Ref: ${order.payment_reference || "-"}</span>
-      ${order.payment_qr_url ? `<img src="${order.payment_qr_url}" alt="QRIS pembayaran">` : ""}
-      ${order.payment_qr_string ? `<textarea readonly rows="3">${order.payment_qr_string}</textarea>` : ""}
+      <span>Ref: ${safeText(order.payment_reference || "-")}</span>
+      ${order.payment_qr_url ? `<img src="${safeText(order.payment_qr_url)}" alt="QRIS pembayaran">` : ""}
+      ${order.payment_qr_string ? `<textarea readonly rows="3">${safeText(order.payment_qr_string)}</textarea>` : ""}
       <button class="secondary-button" data-self-check-qris>Cek Status Pembayaran</button>
     </div>
   ` : "";
@@ -99,7 +167,7 @@ function renderSelfPayment(order) {
       </button>
       <button class="payment-method-card ${order.payment_method === "Transfer" ? "active" : ""}" data-self-pay="Transfer">
         <strong>Transfer</strong>
-        <span>${transfer.bank_name || "Transfer bank"}</span>
+        <span>${safeText(transfer.bank_name || "Transfer bank")}</span>
       </button>
       <button class="payment-method-card ${order.payment_method === "Cash" ? "active" : ""}" data-self-pay="Cash">
         <strong>Cash</strong>
@@ -109,21 +177,21 @@ function renderSelfPayment(order) {
     ${qrisPanel}
     ${order.payment_method === "Transfer" ? `
       <div class="manual-payment-info">
-        <strong>${transfer.bank_name || "Transfer Bank"}</strong>
+        <strong>${safeText(transfer.bank_name || "Transfer Bank")}</strong>
         <span>No. Rekening</span>
-        <b>${transfer.account_number || "-"}</b>
+        <b>${safeText(transfer.account_number || "-")}</b>
         <span>Atas Nama</span>
-        <b>${transfer.account_name || "Zolix Shoe Care"}</b>
-        <p>${transfer.instructions || "Transfer sesuai total invoice lalu kirim bukti pembayaran melalui WhatsApp."}</p>
+        <b>${safeText(transfer.account_name || "Zolix Shoe Care")}</b>
+        <p>${safeText(transfer.instructions || "Transfer sesuai total invoice lalu kirim bukti pembayaran melalui WhatsApp.")}</p>
       </div>
     ` : ""}
     ${order.payment_method === "Cash" ? `
       <div class="manual-payment-info">
         <strong>Cash</strong>
-        <p>${cash.instructions || "Bayar langsung di outlet saat pickup atau saat menyerahkan sepatu."}</p>
+        <p>${safeText(cash.instructions || "Bayar langsung di outlet saat pickup atau saat menyerahkan sepatu.")}</p>
       </div>
     ` : ""}
-    <p class="self-payment-note">Status saat ini: <strong>${order.payment_status}</strong></p>
+    <p class="self-payment-note">Status saat ini: <strong>${safeText(order.payment_status || "-")}</strong></p>
   `;
 }
 
@@ -153,13 +221,9 @@ async function selectSelfPayment(method) {
       });
       currentOrder = result.order;
     }
+    renderOverview(currentOrder);
+    renderInvoiceSummary(currentOrder);
     renderSelfPayment(currentOrder);
-    document.querySelector("#invoice-summary").innerHTML = `
-      <div class="summary-row"><span>Status pembayaran</span><strong>${currentOrder.payment_status}</strong></div>
-      <div class="summary-row"><span>Metode</span><strong>${currentOrder.payment_method}</strong></div>
-      ${currentOrder.items.map((item) => `<div class="summary-row"><span>${item.service} × ${item.qty}</span><strong>${trackingRupiah.format(item.price * item.qty)}</strong></div>`).join("")}
-      <div class="summary-row total"><span>Total</span><strong>${trackingRupiah.format(currentOrder.total_price)}</strong></div>
-    `;
   } catch (error) {
     alert(error.message || "Gagal memilih pembayaran");
   }
@@ -172,8 +236,9 @@ async function checkSelfQRIS() {
       invoice_number: currentOrder.invoice_number,
     });
     currentOrder = result.order;
+    renderOverview(currentOrder);
+    renderInvoiceSummary(currentOrder);
     renderSelfPayment(currentOrder);
-    await loadTracking();
   } catch (error) {
     alert(error.message || "Gagal mengecek pembayaran");
   }
