@@ -7,7 +7,7 @@
   --soft: #f8f9fa;
   --card: #ffffff;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  --sidebar-width: 246px;
+  --sidebar-width: 390px;
 }
 
 * {
@@ -97,7 +97,7 @@ button {
 }
 
 .brand-logo {
-  width: 116px;
+  width: 350px;
   max-width: 100%;
   height: auto;
   display: block;
@@ -105,7 +105,7 @@ button {
 }
 
 .login-card .brand-logo {
-  width: 132px;
+  width: 260px;
 }
 
 .nav {
@@ -1003,7 +1003,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .tracking-header .brand-logo {
-  width: 116px;
+  width: 260px;
 }
 
 .tracking-hero {
