@@ -25,6 +25,7 @@ type Server struct {
 	jwtSecret string
 	publicURL string
 	wa        *WhatsAppClient
+	payments  *AutoGoPayClient
 }
 
 type DataStore interface {
@@ -40,6 +41,8 @@ type DataStore interface {
 	UpdateOrder(id int, input UpdateOrderRequest) (Order, error)
 	DeleteOrder(id int) bool
 	AddMedia(orderID int, mediaType, url string) (Media, error)
+	UpdateOrderPayment(id int, update PaymentUpdate) (Order, error)
+	OrderByPaymentReference(reference string) (Order, bool)
 }
 
 func NewServer(store DataStore, staticDir, assetsDir string) *Server {
@@ -51,6 +54,7 @@ func NewServer(store DataStore, staticDir, assetsDir string) *Server {
 		jwtSecret: envDefault("JWT_SECRET", "zolix-dev-secret"),
 		publicURL: envDefault("PUBLIC_BASE_URL", "http://localhost:8080"),
 		wa:        NewWhatsAppClient(),
+		payments:  NewAutoGoPayClient(),
 	}
 }
 
@@ -68,6 +72,9 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/api/v1/services", s.requireAuth(s.services))
 	mux.HandleFunc("/api/v1/upload", s.requireAuth(s.upload))
 	mux.HandleFunc("/api/v1/whatsapp/send", s.requireAuth(s.sendWhatsApp))
+	mux.HandleFunc("/api/v1/payments/qris/generate", s.requireAuth(s.generateQRISPayment))
+	mux.HandleFunc("/api/v1/payments/qris/status", s.requireAuth(s.checkQRISPayment))
+	mux.HandleFunc("/api/v1/payments/autogopay/webhook", s.autoGoPayWebhook)
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(s.staticDir))))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(s.assetsDir))))
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir(s.uploadDir))))
@@ -261,6 +268,182 @@ func (s *Server) upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, media)
+}
+
+func (s *Server) generateQRISPayment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	var input struct {
+		OrderID int `json:"order_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON payload")
+		return
+	}
+	order, ok := s.store.Order(input.OrderID)
+	if !ok {
+		notFound(w)
+		return
+	}
+	if order.TotalPrice <= 0 {
+		writeError(w, http.StatusBadRequest, "order total must be greater than zero")
+		return
+	}
+	if !s.payments.Enabled() {
+		writeError(w, http.StatusBadGateway, "AUTOGOPAY_API_KEY is not configured")
+		return
+	}
+	result, err := s.payments.GenerateQRIS(r.Context(), order.TotalPrice)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	now := time.Now()
+	expiry := result.ExpiryTime
+	updated, err := s.store.UpdateOrderPayment(order.ID, PaymentUpdate{
+		PaymentStatus:          PaymentUnpaid,
+		PaymentMethod:          "QRIS",
+		PaymentProvider:        "AutoGoPay",
+		PaymentReference:       result.TransactionID,
+		PaymentExternalOrderID: result.OrderID,
+		PaymentQRString:        result.QRString,
+		PaymentQRURL:           result.QRURL,
+		PaymentExpiryTime:      expiry,
+		PaymentUpdatedAt:       &now,
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"order":   updated,
+		"payment": paymentPayload(updated),
+	})
+}
+
+func (s *Server) checkQRISPayment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	var input struct {
+		OrderID int `json:"order_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON payload")
+		return
+	}
+	order, ok := s.store.Order(input.OrderID)
+	if !ok {
+		notFound(w)
+		return
+	}
+	if strings.TrimSpace(order.PaymentReference) == "" {
+		writeError(w, http.StatusBadRequest, "order does not have an AutoGoPay transaction")
+		return
+	}
+	if !s.payments.Enabled() {
+		writeError(w, http.StatusBadGateway, "AUTOGOPAY_API_KEY is not configured")
+		return
+	}
+	status, err := s.payments.QRISStatus(r.Context(), order.PaymentReference)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	updated, err := s.applyAutoGoPayStatus(order, status.Status)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"order":   updated,
+		"payment": paymentPayload(updated),
+		"status":  status.Status,
+	})
+}
+
+func (s *Server) autoGoPayWebhook(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid webhook body")
+		return
+	}
+	if !s.payments.VerifySignature(body, r.Header.Get("X-Signature")) {
+		writeError(w, http.StatusUnauthorized, "invalid webhook signature")
+		return
+	}
+	var payload AutoGoPayWebhookPayload
+	if err := json.Unmarshal(body, &payload); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid webhook JSON")
+		return
+	}
+	if strings.ToLower(strings.TrimSpace(payload.Event)) == "verification.challenge" {
+		writeJSON(w, http.StatusOK, map[string]bool{"success": true})
+		return
+	}
+	switch strings.ToLower(strings.TrimSpace(payload.Event)) {
+	case "payment.update", "transaction.received":
+	default:
+		writeJSON(w, http.StatusOK, map[string]any{"ignored": true})
+		return
+	}
+	order, ok := s.store.OrderByPaymentReference(payload.Transaction.ID)
+	if !ok {
+		writeJSON(w, http.StatusOK, map[string]any{"received": true, "matched": false})
+		return
+	}
+	updated, err := s.applyAutoGoPayStatus(order, payload.Transaction.Status)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"received": true,
+		"matched":  true,
+		"order":    updated.ID,
+	})
+}
+
+func (s *Server) applyAutoGoPayStatus(order Order, status string) (Order, error) {
+	now := time.Now()
+	update := PaymentUpdate{
+		PaymentStatus:          order.PaymentStatus,
+		PaymentMethod:          "QRIS",
+		PaymentProvider:        "AutoGoPay",
+		PaymentReference:       order.PaymentReference,
+		PaymentExternalOrderID: order.PaymentExternalOrderID,
+		PaymentQRString:        order.PaymentQRString,
+		PaymentQRURL:           order.PaymentQRURL,
+		PaymentExpiryTime:      order.PaymentExpiryTime,
+		PaymentUpdatedAt:       &now,
+	}
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "paid", "settlement", "success", "completed":
+		update.PaymentStatus = PaymentPaid
+	case "expired", "expire", "failed", "cancelled", "canceled", "deny":
+		update.PaymentStatus = PaymentUnpaid
+	}
+	return s.store.UpdateOrderPayment(order.ID, update)
+}
+
+func paymentPayload(order Order) map[string]any {
+	return map[string]any{
+		"provider":          order.PaymentProvider,
+		"transaction_id":    order.PaymentReference,
+		"external_order_id": order.PaymentExternalOrderID,
+		"qr_string":         order.PaymentQRString,
+		"qr_url":            order.PaymentQRURL,
+		"expiry_time":       order.PaymentExpiryTime,
+		"status":            order.PaymentStatus,
+		"updated_at":        order.PaymentUpdatedAt,
+	}
 }
 
 func (s *Server) sendWhatsApp(w http.ResponseWriter, r *http.Request) {

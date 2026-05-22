@@ -379,6 +379,47 @@ func (s *PostgresStore) AddMedia(orderID int, mediaType, url string) (Media, err
 	return media, nil
 }
 
+func (s *PostgresStore) UpdateOrderPayment(id int, update PaymentUpdate) (Order, error) {
+	values := map[string]any{
+		"payment_provider":          update.PaymentProvider,
+		"payment_reference":         update.PaymentReference,
+		"payment_external_order_id": update.PaymentExternalOrderID,
+		"payment_qr_string":         update.PaymentQRString,
+		"payment_qr_url":            update.PaymentQRURL,
+		"payment_expiry_time":       update.PaymentExpiryTime,
+		"payment_updated_at":        update.PaymentUpdatedAt,
+	}
+	if update.PaymentStatus != "" {
+		values["payment_status"] = update.PaymentStatus
+	}
+	if strings.TrimSpace(update.PaymentMethod) != "" {
+		values["payment_method"] = update.PaymentMethod
+	}
+	result := s.db.Model(&Order{}).Where("id = ?", id).Updates(values)
+	if result.Error != nil {
+		return Order{}, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return Order{}, errors.New("order not found")
+	}
+	updated, ok := s.Order(id)
+	if !ok {
+		return Order{}, errors.New("order not found")
+	}
+	return updated, nil
+}
+
+func (s *PostgresStore) OrderByPaymentReference(reference string) (Order, bool) {
+	var order Order
+	err := s.db.Preload("Items").Preload("Media").Preload("Timeline").
+		Where("payment_reference = ?", strings.TrimSpace(reference)).
+		First(&order).Error
+	if err != nil {
+		return Order{}, false
+	}
+	return order, true
+}
+
 func (s *PostgresStore) Customers() []Customer {
 	var customers []Customer
 	if err := s.db.Order("created_at desc").Find(&customers).Error; err != nil {

@@ -344,6 +344,44 @@ func (s *Store) AddMedia(orderID int, mediaType, url string) (Media, error) {
 	return Media{}, errors.New("order not found")
 }
 
+func (s *Store) UpdateOrderPayment(id int, update PaymentUpdate) (Order, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for i := range s.orders {
+		if s.orders[i].ID != id {
+			continue
+		}
+		if update.PaymentStatus != "" {
+			s.orders[i].PaymentStatus = update.PaymentStatus
+		}
+		if strings.TrimSpace(update.PaymentMethod) != "" {
+			s.orders[i].PaymentMethod = update.PaymentMethod
+		}
+		s.orders[i].PaymentProvider = update.PaymentProvider
+		s.orders[i].PaymentReference = update.PaymentReference
+		s.orders[i].PaymentExternalOrderID = update.PaymentExternalOrderID
+		s.orders[i].PaymentQRString = update.PaymentQRString
+		s.orders[i].PaymentQRURL = update.PaymentQRURL
+		s.orders[i].PaymentExpiryTime = update.PaymentExpiryTime
+		s.orders[i].PaymentUpdatedAt = update.PaymentUpdatedAt
+		return s.orders[i], nil
+	}
+	return Order{}, errors.New("order not found")
+}
+
+func (s *Store) OrderByPaymentReference(reference string) (Order, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	reference = strings.TrimSpace(reference)
+	for _, order := range s.orders {
+		if reference != "" && order.PaymentReference == reference {
+			return order, true
+		}
+	}
+	return Order{}, false
+}
+
 func (s *Store) Customers() []Customer {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

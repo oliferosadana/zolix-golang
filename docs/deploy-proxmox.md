@@ -133,6 +133,8 @@ WAHA_API_KEY=isi-dengan-api-key-panjang
 WAHA_DASHBOARD_USERNAME=admin
 WAHA_DASHBOARD_PASSWORD=isi-dengan-password-dashboard-panjang
 WAHA_SESSION=default
+AUTOGOPAY_API_KEY=isi-api-key-autogopay
+AUTOGOPAY_BASE_URL=https://v1-gateway.autogopay.site
 DATABASE_URL=postgres://zolix_user:ganti-password-kuat@192.168.18.101:5432/zolix_db?sslmode=disable&client_encoding=UTF8
 ```
 
@@ -162,6 +164,23 @@ Di Nginx Proxy Manager, buat Proxy Host untuk Zolix:
 
 Jika belum memakai domain publik, akses langsung via `http://192.168.18.100:8090` tetap bisa.
 
+## 6. AutoGoPay QRIS
+
+Isi `AUTOGOPAY_API_KEY` di `.env`, lalu recreate container app:
+
+```bash
+cd /opt/zolix
+docker compose up -d --build app
+```
+
+Endpoint webhook yang perlu didaftarkan di AutoGoPay:
+
+```text
+https://domain-zolix-anda/api/v1/payments/autogopay/webhook
+```
+
+Jika belum memakai domain publik, webhook dari AutoGoPay tidak akan bisa menjangkau IP LAN `192.168.18.100`; generate dan cek status QRIS manual dari dashboard tetap bisa selama App Server punya akses internet.
+
 Opsional, buat Proxy Host untuk WAHA dashboard:
 
 - Domain Names: isi domain atau hostname internal WAHA.
@@ -169,7 +188,7 @@ Opsional, buat Proxy Host untuk WAHA dashboard:
 - Forward Hostname/IP: `waha`
 - Forward Port: `3000`
 
-## 6. Operasi Harian
+## 7. Operasi Harian
 
 Update aplikasi:
 

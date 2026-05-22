@@ -74,21 +74,28 @@ type Media struct {
 }
 
 type Order struct {
-	ID              int           `json:"id"`
-	InvoiceNumber   string        `json:"invoice_number"`
-	CustomerID      int           `json:"customer_id"`
-	CustomerName    string        `json:"customer_name"`
-	CustomerPhone   string        `json:"customer_phone"`
-	Status          Status        `json:"status"`
-	TotalPrice      int           `json:"total_price"`
-	PaymentStatus   PaymentStatus `json:"payment_status"`
-	PaymentMethod   string        `json:"payment_method"`
-	Notes           string        `json:"notes"`
-	CreatedAt       time.Time     `json:"created_at"`
-	EstimatedDoneAt time.Time     `json:"estimated_done_at"`
-	Items           []OrderItem   `json:"items"`
-	Media           []Media       `json:"media"`
-	Timeline        []Timeline    `json:"timeline"`
+	ID                     int           `json:"id"`
+	InvoiceNumber          string        `json:"invoice_number"`
+	CustomerID             int           `json:"customer_id"`
+	CustomerName           string        `json:"customer_name"`
+	CustomerPhone          string        `json:"customer_phone"`
+	Status                 Status        `json:"status"`
+	TotalPrice             int           `json:"total_price"`
+	PaymentStatus          PaymentStatus `json:"payment_status"`
+	PaymentMethod          string        `json:"payment_method"`
+	PaymentProvider        string        `json:"payment_provider"`
+	PaymentReference       string        `json:"payment_reference"`
+	PaymentExternalOrderID string        `json:"payment_external_order_id"`
+	PaymentQRString        string        `json:"payment_qr_string"`
+	PaymentQRURL           string        `json:"payment_qr_url"`
+	PaymentExpiryTime      *time.Time    `json:"payment_expiry_time,omitempty"`
+	PaymentUpdatedAt       *time.Time    `json:"payment_updated_at,omitempty"`
+	Notes                  string        `json:"notes"`
+	CreatedAt              time.Time     `json:"created_at"`
+	EstimatedDoneAt        time.Time     `json:"estimated_done_at"`
+	Items                  []OrderItem   `json:"items"`
+	Media                  []Media       `json:"media"`
+	Timeline               []Timeline    `json:"timeline"`
 }
 
 type Timeline struct {
@@ -126,4 +133,16 @@ type UpdateOrderRequest struct {
 	Notes           string        `json:"notes"`
 	EstimatedDoneAt time.Time     `json:"estimated_done_at"`
 	Items           []OrderItem   `json:"items"`
+}
+
+type PaymentUpdate struct {
+	PaymentStatus          PaymentStatus
+	PaymentMethod          string
+	PaymentProvider        string
+	PaymentReference       string
+	PaymentExternalOrderID string
+	PaymentQRString        string
+	PaymentQRURL           string
+	PaymentExpiryTime      *time.Time
+	PaymentUpdatedAt       *time.Time
 }

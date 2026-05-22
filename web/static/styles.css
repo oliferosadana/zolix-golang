@@ -985,6 +985,49 @@ input:focus, select:focus, textarea:focus {
   align-items: end;
 }
 
+.payment-box {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px;
+}
+
+.payment-box strong,
+.payment-box span {
+  display: block;
+}
+
+.payment-box span {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.payment-box img {
+  width: min(220px, 100%);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  justify-self: center;
+}
+
+.payment-box textarea {
+  min-height: 88px;
+  font-size: 12px;
+  resize: none;
+}
+
+.payment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .tracking-body {
   background: #f8f9fa;
 }

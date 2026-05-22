@@ -299,6 +299,18 @@ function openDrawer(orderID) {
       <div><strong>Total</strong><span>${rupiah.format(order.total_price)}</span></div>
       <div><strong>Estimasi</strong><span>${formatDate(order.estimated_done_at)}</span></div>
     </div>
+    <div class="payment-box">
+      <div>
+        <strong>QRIS AutoGoPay</strong>
+        <span>${order.payment_reference ? `Ref: ${order.payment_reference}` : "Belum ada transaksi QRIS"}</span>
+      </div>
+      ${order.payment_qr_url ? `<img src="${order.payment_qr_url}" alt="QRIS pembayaran ${order.invoice_number}">` : ""}
+      ${order.payment_qr_string ? `<textarea readonly rows="3">${order.payment_qr_string}</textarea>` : ""}
+      <div class="payment-actions">
+        <button class="secondary-button" data-generate-qris="${order.id}">Generate QRIS</button>
+        ${order.payment_reference ? `<button class="secondary-button" data-check-qris="${order.id}">Cek Status</button>` : ""}
+      </div>
+    </div>
     <h3>Timeline Progress</h3>
     <div class="timeline">
       ${order.timeline.map((step) => `
@@ -350,6 +362,32 @@ async function shareWhatsApp(orderID) {
     alert("Pesan WhatsApp berhasil dikirim.");
   } catch (error) {
     alert(error.message || "Pesan WhatsApp gagal dikirim.");
+  }
+}
+
+async function generateQRIS(orderID) {
+  try {
+    await api("/api/v1/payments/qris/generate", {
+      method: "POST",
+      body: JSON.stringify({ order_id: Number(orderID) }),
+    });
+    await load();
+    openDrawer(orderID);
+  } catch (error) {
+    alert(error.message || "Gagal membuat QRIS");
+  }
+}
+
+async function checkQRIS(orderID) {
+  try {
+    await api("/api/v1/payments/qris/status", {
+      method: "POST",
+      body: JSON.stringify({ order_id: Number(orderID) }),
+    });
+    await load();
+    openDrawer(orderID);
+  } catch (error) {
+    alert(error.message || "Gagal mengecek status QRIS");
   }
 }
 
@@ -443,6 +481,12 @@ document.addEventListener("click", (event) => {
 
   const wa = event.target.closest("[data-wa]");
   if (wa) shareWhatsApp(wa.dataset.wa);
+
+  const generateQRISButton = event.target.closest("[data-generate-qris]");
+  if (generateQRISButton) generateQRIS(generateQRISButton.dataset.generateQris);
+
+  const checkQRISButton = event.target.closest("[data-check-qris]");
+  if (checkQRISButton) checkQRIS(checkQRISButton.dataset.checkQris);
 
   const saveStatus = event.target.closest("[data-save-status]");
   if (saveStatus) updateOrderStatus(saveStatus.dataset.saveStatus);

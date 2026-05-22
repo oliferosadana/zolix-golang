@@ -47,6 +47,8 @@ services:
       WAHA_BASE_URL: "http://waha:3000"
       WAHA_API_KEY: "${WAHA_API_KEY}"
       WAHA_SESSION: "${WAHA_SESSION:-default}"
+      AUTOGOPAY_API_KEY: "${AUTOGOPAY_API_KEY:-}"
+      AUTOGOPAY_BASE_URL: "${AUTOGOPAY_BASE_URL:-https://v1-gateway.autogopay.site}"
       STORE: postgres
       DATABASE_URL: "${DATABASE_URL}"
     ports:
