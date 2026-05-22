@@ -87,26 +87,22 @@ button {
   top: 0;
 }
 
-.brand-mark {
-  font-size: 44px;
-  line-height: 44px;
-  font-weight: 900;
-  font-style: italic;
-  letter-spacing: -0.05em;
-  color: #050505;
+.brand {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 8px;
+  background: #050505;
+  padding: 10px 12px;
 }
 
-.brand-line {
-  color: var(--lime);
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.42em;
-}
-
-.brand-caption {
-  font-size: 7px;
-  font-weight: 900;
-  letter-spacing: 0.12em;
+.brand-logo {
+  width: 148px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .nav {
@@ -274,9 +270,12 @@ button {
 .mobile-brand {
   display: none;
   margin-right: auto;
-  font-weight: 900;
-  font-style: italic;
-  font-size: 26px;
+  width: 136px;
+  height: auto;
+  border-radius: 8px;
+  background: #050505;
+  padding: 8px 10px;
+  object-fit: contain;
 }
 
 .icon-button {
@@ -1003,9 +1002,8 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 32px;
 }
 
-.tracking-header .brand-mark {
-  font-size: 34px;
-  line-height: 34px;
+.tracking-header .brand-logo {
+  width: 132px;
 }
 
 .tracking-hero {
@@ -1246,7 +1244,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .mobile-brand {
-    font-size: 22px;
+    width: 118px;
   }
 
   .icon-button {
