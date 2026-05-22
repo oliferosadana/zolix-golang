@@ -64,6 +64,10 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/", s.index)
 	mux.HandleFunc("/api/v1/auth/login", s.login)
 	mux.HandleFunc("/api/v1/public/orders/", s.publicOrderByInvoice)
+	mux.HandleFunc("/api/v1/public/payment-config", s.publicPaymentConfig)
+	mux.HandleFunc("/api/v1/public/payments/qris/generate", s.publicGenerateQRISPayment)
+	mux.HandleFunc("/api/v1/public/payments/qris/status", s.publicCheckQRISPayment)
+	mux.HandleFunc("/api/v1/public/payments/method", s.publicSetPaymentMethod)
 	mux.HandleFunc("/api/v1/auth/me", s.requireAuth(s.me))
 	mux.HandleFunc("/api/v1/dashboard", s.requireAuth(s.dashboard))
 	mux.HandleFunc("/api/v1/orders", s.requireAuth(s.orders))
@@ -105,6 +109,25 @@ func (s *Server) publicOrderByInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, order)
+}
+
+func (s *Server) publicPaymentConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"qris_enabled": s.payments.Enabled(),
+		"transfer": map[string]string{
+			"bank_name":      envDefault("TRANSFER_BANK_NAME", "BCA"),
+			"account_number": envDefault("TRANSFER_ACCOUNT_NUMBER", "Isi nomor rekening di .env"),
+			"account_name":   envDefault("TRANSFER_ACCOUNT_NAME", "Zolix Shoe Care"),
+			"instructions":   envDefault("TRANSFER_INSTRUCTIONS", "Transfer sesuai total invoice lalu kirim bukti pembayaran melalui WhatsApp."),
+		},
+		"cash": map[string]string{
+			"instructions": envDefault("CASH_INSTRUCTIONS", "Bayar langsung di outlet saat pickup atau saat menyerahkan sepatu."),
+		},
+	})
 }
 
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
@@ -287,34 +310,37 @@ func (s *Server) generateQRISPayment(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
-	if order.TotalPrice <= 0 {
-		writeError(w, http.StatusBadRequest, "order total must be greater than zero")
-		return
-	}
-	if !s.payments.Enabled() {
-		writeError(w, http.StatusBadGateway, "AUTOGOPAY_API_KEY is not configured")
-		return
-	}
-	result, err := s.payments.GenerateQRIS(r.Context(), order.TotalPrice)
+	updated, err := s.generateQRISForOrder(r.Context(), order)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, err.Error())
 		return
 	}
-	now := time.Now()
-	expiry := result.ExpiryTime
-	updated, err := s.store.UpdateOrderPayment(order.ID, PaymentUpdate{
-		PaymentStatus:          PaymentUnpaid,
-		PaymentMethod:          "QRIS",
-		PaymentProvider:        "AutoGoPay",
-		PaymentReference:       result.TransactionID,
-		PaymentExternalOrderID: result.OrderID,
-		PaymentQRString:        result.QRString,
-		PaymentQRURL:           result.QRURL,
-		PaymentExpiryTime:      expiry,
-		PaymentUpdatedAt:       &now,
+	writeJSON(w, http.StatusOK, map[string]any{
+		"order":   updated,
+		"payment": paymentPayload(updated),
 	})
+}
+
+func (s *Server) publicGenerateQRISPayment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	var input struct {
+		InvoiceNumber string `json:"invoice_number"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON payload")
+		return
+	}
+	order, ok := s.store.OrderByInvoice(input.InvoiceNumber)
+	if !ok {
+		notFound(w)
+		return
+	}
+	updated, err := s.generateQRISForOrder(r.Context(), order)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeError(w, http.StatusBadGateway, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -340,20 +366,77 @@ func (s *Server) checkQRISPayment(w http.ResponseWriter, r *http.Request) {
 		notFound(w)
 		return
 	}
-	if strings.TrimSpace(order.PaymentReference) == "" {
-		writeError(w, http.StatusBadRequest, "order does not have an AutoGoPay transaction")
-		return
-	}
-	if !s.payments.Enabled() {
-		writeError(w, http.StatusBadGateway, "AUTOGOPAY_API_KEY is not configured")
-		return
-	}
-	status, err := s.payments.QRISStatus(r.Context(), order.PaymentReference)
+	updated, status, err := s.checkQRISForOrder(r.Context(), order)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, err.Error())
 		return
 	}
-	updated, err := s.applyAutoGoPayStatus(order, status.Status)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"order":   updated,
+		"payment": paymentPayload(updated),
+		"status":  status,
+	})
+}
+
+func (s *Server) publicCheckQRISPayment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	var input struct {
+		InvoiceNumber string `json:"invoice_number"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON payload")
+		return
+	}
+	order, ok := s.store.OrderByInvoice(input.InvoiceNumber)
+	if !ok {
+		notFound(w)
+		return
+	}
+	updated, status, err := s.checkQRISForOrder(r.Context(), order)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"order":   updated,
+		"payment": paymentPayload(updated),
+		"status":  status,
+	})
+}
+
+func (s *Server) publicSetPaymentMethod(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	var input struct {
+		InvoiceNumber string `json:"invoice_number"`
+		Method        string `json:"method"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON payload")
+		return
+	}
+	order, ok := s.store.OrderByInvoice(input.InvoiceNumber)
+	if !ok {
+		notFound(w)
+		return
+	}
+	method := strings.TrimSpace(input.Method)
+	if method != "Transfer" && method != "Cash" {
+		writeError(w, http.StatusBadRequest, "method must be Transfer or Cash")
+		return
+	}
+	now := time.Now()
+	updated, err := s.store.UpdateOrderPayment(order.ID, PaymentUpdate{
+		PaymentStatus:    PaymentUnpaid,
+		PaymentMethod:    method,
+		PaymentProvider:  "Manual",
+		PaymentUpdatedAt: &now,
+	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -361,7 +444,6 @@ func (s *Server) checkQRISPayment(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"order":   updated,
 		"payment": paymentPayload(updated),
-		"status":  status.Status,
 	})
 }
 
@@ -431,6 +513,49 @@ func (s *Server) applyAutoGoPayStatus(order Order, status string) (Order, error)
 		update.PaymentStatus = PaymentUnpaid
 	}
 	return s.store.UpdateOrderPayment(order.ID, update)
+}
+
+func (s *Server) generateQRISForOrder(ctx context.Context, order Order) (Order, error) {
+	if order.TotalPrice <= 0 {
+		return Order{}, errors.New("order total must be greater than zero")
+	}
+	if !s.payments.Enabled() {
+		return Order{}, errors.New("AUTOGOPAY_API_KEY is not configured")
+	}
+	result, err := s.payments.GenerateQRIS(ctx, order.TotalPrice)
+	if err != nil {
+		return Order{}, err
+	}
+	now := time.Now()
+	return s.store.UpdateOrderPayment(order.ID, PaymentUpdate{
+		PaymentStatus:          PaymentUnpaid,
+		PaymentMethod:          "QRIS",
+		PaymentProvider:        "AutoGoPay",
+		PaymentReference:       result.TransactionID,
+		PaymentExternalOrderID: result.OrderID,
+		PaymentQRString:        result.QRString,
+		PaymentQRURL:           result.QRURL,
+		PaymentExpiryTime:      result.ExpiryTime,
+		PaymentUpdatedAt:       &now,
+	})
+}
+
+func (s *Server) checkQRISForOrder(ctx context.Context, order Order) (Order, string, error) {
+	if strings.TrimSpace(order.PaymentReference) == "" {
+		return Order{}, "", errors.New("order does not have an AutoGoPay transaction")
+	}
+	if !s.payments.Enabled() {
+		return Order{}, "", errors.New("AUTOGOPAY_API_KEY is not configured")
+	}
+	status, err := s.payments.QRISStatus(ctx, order.PaymentReference)
+	if err != nil {
+		return Order{}, "", err
+	}
+	updated, err := s.applyAutoGoPayStatus(order, status.Status)
+	if err != nil {
+		return Order{}, "", err
+	}
+	return updated, status.Status, nil
 }
 
 func paymentPayload(order Order) map[string]any {

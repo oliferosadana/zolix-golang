@@ -49,6 +49,11 @@ services:
       WAHA_SESSION: "${WAHA_SESSION:-default}"
       AUTOGOPAY_API_KEY: "${AUTOGOPAY_API_KEY:-}"
       AUTOGOPAY_BASE_URL: "${AUTOGOPAY_BASE_URL:-https://v1-gateway.autogopay.site}"
+      TRANSFER_BANK_NAME: "${TRANSFER_BANK_NAME:-BCA}"
+      TRANSFER_ACCOUNT_NUMBER: "${TRANSFER_ACCOUNT_NUMBER:-}"
+      TRANSFER_ACCOUNT_NAME: "${TRANSFER_ACCOUNT_NAME:-Zolix Shoe Care}"
+      TRANSFER_INSTRUCTIONS: "${TRANSFER_INSTRUCTIONS:-Transfer sesuai total invoice lalu kirim bukti pembayaran melalui WhatsApp.}"
+      CASH_INSTRUCTIONS: "${CASH_INSTRUCTIONS:-Bayar langsung di outlet saat pickup atau saat menyerahkan sepatu.}"
       STORE: postgres
       DATABASE_URL: "${DATABASE_URL}"
     ports:

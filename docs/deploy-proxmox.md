@@ -135,6 +135,11 @@ WAHA_DASHBOARD_PASSWORD=isi-dengan-password-dashboard-panjang
 WAHA_SESSION=default
 AUTOGOPAY_API_KEY=isi-api-key-autogopay
 AUTOGOPAY_BASE_URL=https://v1-gateway.autogopay.site
+TRANSFER_BANK_NAME=BCA
+TRANSFER_ACCOUNT_NUMBER=isi-nomor-rekening
+TRANSFER_ACCOUNT_NAME=Zolix Shoe Care
+TRANSFER_INSTRUCTIONS=Transfer sesuai total invoice lalu kirim bukti pembayaran melalui WhatsApp.
+CASH_INSTRUCTIONS=Bayar langsung di outlet saat pickup atau saat menyerahkan sepatu.
 DATABASE_URL=postgres://zolix_user:ganti-password-kuat@192.168.18.101:5432/zolix_db?sslmode=disable&client_encoding=UTF8
 ```
 
@@ -180,6 +185,18 @@ https://domain-zolix-anda/api/v1/payments/autogopay/webhook
 ```
 
 Jika belum memakai domain publik, webhook dari AutoGoPay tidak akan bisa menjangkau IP LAN `192.168.18.100`; generate dan cek status QRIS manual dari dashboard tetap bisa selama App Server punya akses internet.
+
+Pelanggan bisa melakukan self payment dari halaman tracking:
+
+```text
+https://domain-zolix-anda/order/INV-xxxx
+```
+
+Opsi yang tersedia:
+
+- QRIS: generate QRIS AutoGoPay dan cek status pembayaran.
+- Transfer: tampilkan rekening dan instruksi konfirmasi.
+- Cash: catat pilihan bayar tunai di outlet.
 
 Opsional, buat Proxy Host untuk WAHA dashboard:
 

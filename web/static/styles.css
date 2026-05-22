@@ -1028,6 +1028,89 @@ input:focus, select:focus, textarea:focus {
   gap: 10px;
 }
 
+.self-payment {
+  padding: 0 20px 20px;
+}
+
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.payment-method-card {
+  min-height: 96px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+  text-align: left;
+}
+
+.payment-method-card.active {
+  border-color: #9bbd00;
+  box-shadow: inset 0 0 0 2px rgba(203, 255, 0, 0.55);
+}
+
+.payment-method-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.payment-method-card strong,
+.payment-method-card span,
+.manual-payment-info strong,
+.manual-payment-info span,
+.manual-payment-info b,
+.self-payment-result strong,
+.self-payment-result span {
+  display: block;
+}
+
+.payment-method-card span,
+.manual-payment-info span,
+.self-payment-result span,
+.self-payment-note {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.manual-payment-info,
+.self-payment-result {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px;
+}
+
+.manual-payment-info b {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.manual-payment-info p {
+  margin-top: 4px;
+}
+
+.self-payment-result img {
+  width: min(240px, 100%);
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  justify-self: center;
+  object-fit: contain;
+}
+
+.self-payment-result textarea {
+  min-height: 88px;
+  resize: none;
+}
+
 .tracking-body {
   background: #f8f9fa;
 }
@@ -1213,6 +1296,10 @@ input:focus, select:focus, textarea:focus {
   }
 
   .tracking-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-method-grid {
     grid-template-columns: 1fr;
   }
 
