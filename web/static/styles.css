@@ -94,15 +94,19 @@ button {
   max-width: 100%;
   border-radius: 8px;
   background: #050505;
-  padding: 10px 12px;
+  padding: 7px 9px;
 }
 
 .brand-logo {
-  width: 148px;
+  width: 116px;
   max-width: 100%;
   height: auto;
   display: block;
   object-fit: contain;
+}
+
+.login-card .brand-logo {
+  width: 132px;
 }
 
 .nav {
@@ -270,11 +274,11 @@ button {
 .mobile-brand {
   display: none;
   margin-right: auto;
-  width: 136px;
+  width: 104px;
   height: auto;
   border-radius: 8px;
   background: #050505;
-  padding: 8px 10px;
+  padding: 6px 8px;
   object-fit: contain;
 }
 
@@ -1003,7 +1007,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .tracking-header .brand-logo {
-  width: 132px;
+  width: 116px;
 }
 
 .tracking-hero {
@@ -1244,7 +1248,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .mobile-brand {
-    width: 118px;
+    width: 92px;
   }
 
   .icon-button {
