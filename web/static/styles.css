@@ -864,6 +864,137 @@ input:focus, select:focus, textarea:focus {
   gap: 14px;
 }
 
+.payment-dashboard {
+  display: grid;
+  gap: 18px;
+}
+
+.payment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.payment-stat-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.payment-stat-card span,
+.payment-card-info span,
+.payment-card-ref span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.payment-stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(22px, 2.5vw, 30px);
+  line-height: 34px;
+}
+
+.payment-stat-card small {
+  display: block;
+  margin-top: 6px;
+  color: #7d9400;
+  font-weight: 800;
+}
+
+.payment-list {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.payment-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.15fr) minmax(320px, 1.65fr) minmax(210px, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.payment-card-main,
+.payment-card-info,
+.payment-card-ref {
+  min-width: 0;
+}
+
+.payment-card-main {
+  display: grid;
+  gap: 12px;
+}
+
+.payment-card-main strong,
+.payment-card-main span,
+.payment-card-ref strong {
+  display: block;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.payment-card-main small,
+.payment-card-ref small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.payment-card-info {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.payment-card-info strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.payment-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.payment-card-actions .secondary-button {
+  width: auto;
+  min-width: 104px;
+  height: 38px;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.payment-empty {
+  border: 1px dashed #b6cc24;
+  border-radius: 10px;
+  background: #fbfff0;
+  padding: 22px;
+}
+
+.payment-empty strong,
+.payment-empty span {
+  display: block;
+}
+
+.payment-empty span {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
 .customer-card strong, .service-card strong, .settings-grid strong {
   display: block;
   margin-bottom: 6px;
@@ -1453,6 +1584,20 @@ input:focus, select:focus, textarea:focus {
     grid-template-columns: 1fr;
   }
 
+  .payment-summary-grid,
+  .payment-card,
+  .payment-card-info {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-card {
+    align-items: start;
+  }
+
+  .payment-card-actions {
+    justify-content: flex-start;
+  }
+
   .order-card {
     grid-template-columns: 1fr;
     align-items: start;
@@ -1520,9 +1665,19 @@ input:focus, select:focus, textarea:focus {
   .customer-grid,
   .service-grid,
   .settings-grid,
+  .payment-list,
   .activity-list,
   .order-form {
     padding: 16px;
+  }
+
+  .payment-stat-card,
+  .payment-card {
+    padding: 14px;
+  }
+
+  .payment-card-actions .secondary-button {
+    width: 100%;
   }
 
   .tabs {

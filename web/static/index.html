@@ -32,6 +32,7 @@
           <button class="nav-item active" data-view="dashboard"><span>⌂</span>Dashboard</button>
           <button class="nav-item" data-view="orders"><span>▤</span>List Order</button>
           <button class="nav-item" data-view="create"><span>＋</span>Tambah Order</button>
+          <button class="nav-item" data-view="payments"><span>Rp</span>Pembayaran</button>
           <button class="nav-item" data-view="schedule"><span>□</span>Jadwal</button>
           <button class="nav-item" data-view="customers"><span>♙</span>Pelanggan</button>
           <button class="nav-item" data-view="services"><span>◇</span>Layanan</button>
@@ -175,6 +176,22 @@
               </div>
               <button class="primary-button" type="submit">Simpan Order</button>
             </form>
+          </div>
+        </section>
+
+        <section id="payments-view" class="view">
+          <div class="payment-dashboard">
+            <div class="payment-summary-grid" id="payment-summary-grid"></div>
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Pembayaran Pending</h2>
+                  <p>Daftar invoice yang masih Belum Bayar atau DP.</p>
+                </div>
+                <button class="secondary-button" data-refresh-payments type="button">Refresh</button>
+              </div>
+              <div class="payment-list" id="payment-list"></div>
+            </div>
           </div>
         </section>
 

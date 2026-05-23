@@ -106,6 +106,7 @@ function renderAll() {
   renderCustomers();
   renderServices();
   renderSchedule();
+  renderPayments();
   renderServiceOptions();
 }
 
@@ -245,6 +246,83 @@ function renderSchedule() {
   `).join("");
 }
 
+function pendingPaymentOrders() {
+  return state.orders.filter((order) => ["Belum Bayar", "DP"].includes(order.payment_status));
+}
+
+function paymentAge(order) {
+  const createdAt = new Date(order.created_at);
+  if (Number.isNaN(createdAt.getTime())) return "Tanggal tidak valid";
+  const diffHours = Math.max(0, Math.floor((Date.now() - createdAt.getTime()) / 36e5));
+  if (diffHours < 1) return "Baru dibuat";
+  if (diffHours < 24) return `${diffHours} jam pending`;
+  const days = Math.floor(diffHours / 24);
+  return `${days} hari pending`;
+}
+
+function paymentMethodLabel(order) {
+  const method = order.payment_method || "Belum dipilih";
+  const provider = order.payment_provider ? ` via ${order.payment_provider}` : "";
+  return `${method}${provider}`;
+}
+
+function renderPayments() {
+  const pending = pendingPaymentOrders();
+  const unpaid = pending.filter((order) => order.payment_status === "Belum Bayar");
+  const partial = pending.filter((order) => order.payment_status === "DP");
+  const pendingAmount = pending.reduce((sum, order) => sum + (order.total_price || 0), 0);
+  const qrisPending = pending.filter((order) => order.payment_method === "QRIS").length;
+
+  document.querySelector("#payment-summary-grid").innerHTML = [
+    ["Total Pending", pending.length, `${unpaid.length} belum bayar, ${partial.length} DP`],
+    ["Nominal Pending", rupiah.format(pendingAmount), "Perlu follow up pembayaran"],
+    ["QRIS Pending", qrisPending, "Bisa dicek status AutoGoPay"],
+  ].map(([label, value, note]) => `
+    <article class="payment-stat-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+      <small>${note}</small>
+    </article>
+  `).join("");
+
+  document.querySelector("#payment-list").innerHTML = pending.length ? pending.map((order) => `
+    <article class="payment-card">
+      <div class="payment-card-main">
+        <div>
+          <strong>${order.invoice_number}</strong>
+          <small>${formatDate(order.created_at)} • ${formatTime(order.created_at)} WIB</small>
+        </div>
+        <div>
+          <span>${order.customer_name}</span>
+          <small>${order.customer_phone}</small>
+        </div>
+      </div>
+      <div class="payment-card-info">
+        <div><span>Status Bayar</span><strong>${paymentBadge(order.payment_status)}</strong></div>
+        <div><span>Metode</span><strong>${paymentMethodLabel(order)}</strong></div>
+        <div><span>Total</span><strong>${rupiah.format(order.total_price)}</strong></div>
+        <div><span>Umur Pending</span><strong>${paymentAge(order)}</strong></div>
+      </div>
+      <div class="payment-card-ref">
+        <span>Referensi pembayaran</span>
+        <strong>${order.payment_reference || "Belum ada reference"}</strong>
+        <small>${order.payment_qr_url || order.payment_qr_string ? "QRIS tersedia untuk pelanggan." : "Belum ada QRIS aktif."}</small>
+      </div>
+      <div class="payment-card-actions">
+        <button class="secondary-button" data-open="${order.id}">Detail</button>
+        ${order.payment_method === "QRIS" && !order.payment_reference ? `<button class="secondary-button" data-generate-qris="${order.id}">Generate QRIS</button>` : ""}
+        ${order.payment_reference ? `<button class="secondary-button" data-check-qris="${order.id}">Cek Status</button>` : ""}
+        <a class="secondary-button" href="/order/${encodeURIComponent(order.invoice_number)}" target="_blank" rel="noopener">Tracking</a>
+      </div>
+    </article>
+  `).join("") : `
+    <div class="payment-empty">
+      <strong>Tidak ada pembayaran pending.</strong>
+      <span>Semua invoice sudah lunas atau belum ada order aktif.</span>
+    </div>
+  `;
+}
+
 function renderServiceOptions() {
   const select = document.querySelector("#service-select");
   select.innerHTML = state.services.map((service) => `<option value="${service.name}" data-price="${service.price}">${service.name}</option>`).join("");
@@ -253,6 +331,12 @@ function renderServiceOptions() {
 function statusBadge(status) {
   const [className, label] = statusMeta[status] || ["neutral", status];
   return `<span class="badge ${className}">${label}</span>`;
+}
+
+function paymentBadge(status) {
+  if (status === "Lunas") return `<span class="badge success">LUNAS</span>`;
+  if (status === "DP") return `<span class="badge warning">DP</span>`;
+  return `<span class="badge danger">BELUM BAYAR</span>`;
 }
 
 function formatDate(value) {
@@ -272,6 +356,7 @@ function setView(view) {
     dashboard: ["Dashboard", "Ringkasan operasional ZOLIX Shoe Care hari ini."],
     orders: ["List Order", "Kelola semua order dengan mudah dan cepat."],
     create: ["Tambah Order", "Buat order baru, invoice, dan tracking customer."],
+    payments: ["Pembayaran", "Pantau pembayaran pending, QRIS, transfer, dan cash."],
     schedule: ["Jadwal", "Pantau estimasi selesai dan pickup pelanggan."],
     customers: ["Pelanggan", "Tracking customer dan histori order."],
     services: ["Layanan", "Kelola layanan, harga, dan estimasi pengerjaan."],
@@ -511,6 +596,9 @@ document.addEventListener("click", (event) => {
 
   const deleteButton = event.target.closest("[data-delete-order]");
   if (deleteButton) deleteOrder(deleteButton.dataset.deleteOrder);
+
+  const refreshPayments = event.target.closest("[data-refresh-payments]");
+  if (refreshPayments) load();
 });
 
 document.querySelector("#search-input").addEventListener("input", () => {
