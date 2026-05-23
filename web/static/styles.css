@@ -1620,7 +1620,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .main {
-    padding: 18px 16px 96px;
+    padding: 0 16px 96px;
     max-width: none;
   }
 
@@ -1634,7 +1634,17 @@ input:focus, select:focus, textarea:focus {
   }
 
   .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    min-height: 62px;
+    margin: 0 -16px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     justify-content: flex-start;
+    flex-wrap: nowrap;
   }
 
   .hero-row, .toolbar {
@@ -1705,27 +1715,67 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 720px) {
   .topbar {
-    justify-content: flex-start;
-    gap: 10px;
+    gap: 8px;
   }
 
   .logout-button {
     margin-left: auto;
+    width: auto;
+    height: 38px;
+    padding: 0 10px;
   }
 
   .date-card {
-    width: 100%;
-    order: 3;
+    display: none;
   }
 
   .hero-row {
-    margin-top: 18px;
-    gap: 16px;
+    margin-top: 14px;
+    gap: 10px;
+  }
+
+  .hero-row > div:first-child {
+    min-width: 0;
+    flex-basis: auto;
   }
 
   h1 {
-    font-size: 24px;
-    line-height: 30px;
+    font-size: 21px;
+    line-height: 26px;
+  }
+
+  #page-subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+    line-height: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .toolbar .search {
+    grid-column: 1 / -1;
+    height: 42px;
+    padding: 0 12px;
+    flex-basis: auto;
+  }
+
+  .toolbar .primary-button,
+  .toolbar .secondary-button {
+    height: 40px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  #filter-button {
+    display: none;
   }
 
   .panel-head {
@@ -1774,16 +1824,43 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 480px) {
   .main {
-    padding: 14px 12px 80px;
+    padding: 0 12px 80px;
+  }
+
+  .topbar {
+    min-height: 58px;
+    margin: 0 -12px;
+    padding: 8px 12px;
   }
 
   .mobile-brand {
-    width: 92px;
+    width: 82px;
+  }
+
+  .menu-button {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
   }
 
   .icon-button {
     width: 30px;
     height: 30px;
+  }
+
+  .logout-button {
+    height: 34px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .hero-row {
+    margin-top: 12px;
+  }
+
+  h1 {
+    font-size: 20px;
+    line-height: 24px;
   }
 
   .primary-button,
@@ -1793,6 +1870,11 @@ input:focus, select:focus, textarea:focus {
     min-width: 0;
     width: 100%;
     padding: 0 12px;
+  }
+
+  .topbar .logout-button {
+    width: auto;
+    padding: 0 9px;
   }
 
   .panel-head .link-button {
