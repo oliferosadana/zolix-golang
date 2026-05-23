@@ -1734,8 +1734,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .nota-detail-card {
-  grid-column: 1;
-  grid-row: 3 / span 2;
+  grid-column: 1 / -1;
+  grid-row: auto;
 }
 
 .nota-summary-card {
@@ -1744,8 +1744,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .nota-media-card {
-  grid-column: 2;
-  grid-row: 4;
+  grid-column: 1 / -1;
+  grid-row: auto;
 }
 
 .nota-card {
@@ -2224,6 +2224,16 @@ input:focus, select:focus, textarea:focus {
 .nota-payment-card {
   position: sticky;
   top: 18px;
+}
+
+.nota-payment-summary-panel {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+}
+
+.nota-payment-summary-panel .nota-section-title {
+  margin-bottom: 12px;
 }
 
 .nota-payment-card .self-payment {
