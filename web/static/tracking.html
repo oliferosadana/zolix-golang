@@ -3,70 +3,112 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tracking Order - Zolix</title>
+    <title>Nota / Tracking - Zolix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body class="tracking-body">
-    <main class="tracking-page">
-      <header class="tracking-header">
-        <div class="brand">
-          <img class="brand-logo" src="/assets/logo.png" alt="Zolix Shoe Care">
+    <main class="nota-page">
+      <header class="nota-header">
+        <div class="nota-header-left">
+          <a class="nota-back" href="/">&#8592;</a>
+          <div>
+            <img class="nota-logo" src="/assets/logo.png" alt="Zolix Shoe Care">
+            <h1>Nota / Tracking</h1>
+            <p id="invoice-subtitle">Memuat...</p>
+          </div>
         </div>
-        <a class="secondary-button" id="whatsapp-link" href="#">WhatsApp</a>
+        <div class="nota-actions">
+          <a class="nota-icon-action" id="whatsapp-link" href="#" target="_blank" rel="noopener">
+            <span>&#9678;</span>
+            <b>Chat</b>
+          </a>
+          <button class="nota-icon-action" id="download-nota" type="button">
+            <span>&#8681;</span>
+            <b>PDF</b>
+          </button>
+        </div>
       </header>
 
-      <section class="tracking-hero">
-        <div class="tracking-hero-copy">
-          <span class="tracking-eyebrow">Tracking Order</span>
-          <h1 id="invoice-title">Memuat...</h1>
-          <p id="customer-line">Mohon tunggu sebentar.</p>
-        </div>
-        <div class="tracking-hero-side">
-          <div id="tracking-status"></div>
-          <div class="tracking-overview" id="tracking-overview"></div>
-        </div>
-      </section>
+      <section class="nota-layout">
+        <div class="nota-main">
+          <section class="nota-card nota-status-card">
+            <h2>Status Pengerjaan</h2>
+            <div class="nota-progress" id="tracking-timeline"></div>
+            <div class="nota-alert">
+              <span>&#10003;</span>
+              <div>
+                <strong id="status-message-title">Pesanan Anda sedang diproses!</strong>
+                <p id="status-message-body">Kami sedang mengerjakan sepatu Anda dengan maksimal.</p>
+              </div>
+            </div>
+          </section>
 
-      <section class="tracking-grid">
-        <article class="panel tracking-card">
-          <div class="panel-head">
+          <section class="nota-info-grid">
+            <article class="nota-card nota-order-card">
+              <span class="nota-label">Nomor Nota</span>
+              <div class="nota-invoice-row">
+                <strong id="invoice-title">Memuat...</strong>
+                <div id="tracking-status"></div>
+              </div>
+              <div class="nota-order-meta" id="order-meta"></div>
+            </article>
+
+            <article class="nota-card nota-customer-card">
+              <div class="nota-section-title">
+                <span>&#9675;</span>
+                <h2>Data Pelanggan</h2>
+              </div>
+              <div class="nota-customer-list" id="customer-details"></div>
+            </article>
+          </section>
+
+          <section class="nota-card nota-detail-card">
+            <div class="nota-section-title">
+              <span>ZI</span>
+              <h2>Detail Item</h2>
+            </div>
+            <div class="nota-items" id="invoice-summary"></div>
+          </section>
+
+          <section class="nota-card nota-media-card">
+            <div class="nota-section-title">
+              <span>&#9678;</span>
+              <h2>Foto Sepatu</h2>
+            </div>
+            <div class="nota-media" id="tracking-media"></div>
+          </section>
+
+          <section class="nota-card nota-summary-card">
+            <div class="nota-section-title">
+              <span>Rp</span>
+              <h2>Ringkasan Pembayaran</h2>
+            </div>
+            <div class="nota-payment-summary" id="payment-summary"></div>
+          </section>
+        </div>
+
+        <aside class="nota-card nota-payment-card">
+          <div class="nota-section-title">
+            <span>&#9635;</span>
             <div>
-              <h2>Timeline Progress</h2>
-              <p>Status pengerjaan sepatu Anda.</p>
+              <h2>Pilih Metode Pembayaran</h2>
+              <p>Silakan pilih metode pembayaran dan selesaikan pembayaran Anda.</p>
             </div>
           </div>
-          <div class="timeline" id="tracking-timeline"></div>
-        </article>
-
-        <article class="panel tracking-card">
-          <div class="panel-head">
-            <div>
-              <h2>Nota Pembayaran</h2>
-              <p>Detail layanan dan total invoice.</p>
-            </div>
-          </div>
-          <div class="invoice-summary" id="invoice-summary"></div>
-        </article>
+          <div class="self-payment" id="self-payment"></div>
+        </aside>
       </section>
 
-      <section class="panel tracking-card">
-        <div class="panel-head">
-          <div>
-            <h2>Pembayaran</h2>
-            <p>Pilih metode pembayaran invoice Anda.</p>
-          </div>
+      <section class="nota-confirm">
+        <span>&#10003;</span>
+        <div>
+          <strong>Pesanan akan diproses setelah pembayaran terkonfirmasi.</strong>
+          <p>Jika sudah melakukan pembayaran, mohon konfirmasi via WhatsApp dengan mengirim bukti pembayaran.</p>
         </div>
-        <div class="self-payment" id="self-payment"></div>
-      </section>
-
-      <section class="panel tracking-card">
-        <div class="panel-head">
-          <div>
-            <h2>Before / After</h2>
-            <p>Dokumentasi pengerjaan dari ZOLIX.</p>
-          </div>
-        </div>
-        <div class="media-grid tracking-media" id="tracking-media"></div>
+        <a id="confirm-payment-link" href="#" target="_blank" rel="noopener">Konfirmasi Pembayaran</a>
       </section>
     </main>
 

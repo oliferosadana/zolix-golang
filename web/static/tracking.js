@@ -39,8 +39,14 @@ function badge(status) {
 
 function fmtDate(value) {
   const date = new Date(value);
+  if (Number.isNaN(date.getTime()) || date.getFullYear() < 2000) return "Pending";
+  return `${trackingDate.format(date)}<br>${trackingTime.format(date).replace(".", ":")}`;
+}
+
+function plainDate(value) {
+  const date = new Date(value);
   if (Number.isNaN(date.getTime()) || date.getFullYear() < 2000) return "Menunggu update";
-  return `${trackingDate.format(date)} - ${trackingTime.format(date).replace(".", ":")} WIB`;
+  return `${trackingDate.format(date)}, ${trackingTime.format(date).replace(".", ":")}`;
 }
 
 function paymentClass(status) {
@@ -50,80 +56,152 @@ function paymentClass(status) {
   return "warning";
 }
 
-function renderOverview(order) {
-  document.querySelector("#tracking-overview").innerHTML = `
-    <div class="tracking-overview-item">
-      <span>Total Tagihan</span>
-      <strong>${trackingRupiah.format(order.total_price || 0)}</strong>
-    </div>
-    <div class="tracking-overview-item">
-      <span>Pembayaran</span>
-      <strong class="payment-state ${paymentClass(order.payment_status)}">${safeText(order.payment_status || "-")}</strong>
-    </div>
-    <div class="tracking-overview-item">
-      <span>Metode</span>
-      <strong>${safeText(order.payment_method || "-")}</strong>
-    </div>
-  `;
+function whatsappUrl(order, message) {
+  const phone = String(order.customer_phone || "").replace(/\D/g, "");
+  const text = encodeURIComponent(message || `Halo ZOLIX, saya ingin menanyakan nota ${order.invoice_number}.`);
+  return phone ? `https://wa.me/${phone}?text=${text}` : "#";
 }
 
-function renderInvoiceSummary(order) {
-  const itemRows = (order.items || []).map((item) => `
-    <div class="invoice-item">
-      <div>
-        <strong>${safeText(item.service || "Layanan")}</strong>
-        <span>${safeText(item.shoe_name || "Sepatu")} - Qty ${safeText(item.qty || 0)}</span>
-      </div>
-      <b>${trackingRupiah.format((item.price || 0) * (item.qty || 0))}</b>
-    </div>
-  `).join("");
+function timelineIcon(label) {
+  const normalized = String(label || "").toLowerCase();
+  if (normalized.includes("terima")) return "✓";
+  if (normalized.includes("cuci") || normalized.includes("clean")) return "◉";
+  if (normalized.includes("dry")) return "✽";
+  if (normalized.includes("finish")) return "✦";
+  if (normalized.includes("ambil") || normalized.includes("pickup")) return "□";
+  return "•";
+}
 
-  document.querySelector("#invoice-summary").innerHTML = `
-    <div class="invoice-total-card">
-      <span>Total Invoice</span>
-      <strong>${trackingRupiah.format(order.total_price || 0)}</strong>
-    </div>
-    <div class="invoice-detail-list">
-      <div class="summary-row"><span>Invoice</span><strong>${safeText(order.invoice_number)}</strong></div>
-      <div class="summary-row"><span>Pelanggan</span><strong>${safeText(order.customer_name)}</strong></div>
-      <div class="summary-row"><span>Status pembayaran</span><strong>${safeText(order.payment_status || "-")}</strong></div>
-      <div class="summary-row"><span>Metode</span><strong>${safeText(order.payment_method || "-")}</strong></div>
-    </div>
-    <div class="invoice-items">
-      ${itemRows || `<p class="empty-state">Item layanan belum tersedia.</p>`}
-    </div>
-  `;
+function statusMessage(order) {
+  const status = String(order.status || "").toLowerCase();
+  if (status.includes("completed") || status.includes("selesai") || status.includes("ready")) {
+    return ["Pesanan Anda sudah siap!", "Silakan lakukan pengambilan sesuai instruksi dari ZOLIX Shoe Care."];
+  }
+  if (status.includes("batal")) {
+    return ["Pesanan dibatalkan.", "Silakan hubungi tim ZOLIX jika membutuhkan bantuan lanjutan."];
+  }
+  return ["Pesanan Anda sedang diproses!", "Kami sedang mengerjakan sepatu Anda dengan maksimal. Notifikasi akan dikirim jika pesanan sudah selesai."];
 }
 
 function renderTimeline(order) {
-  document.querySelector("#tracking-timeline").innerHTML = (order.timeline || []).map((step) => `
-    <div class="timeline-item ${step.done ? "done" : ""}">
-      <span class="dot"></span>
-      <div>
+  const timeline = order.timeline && order.timeline.length ? order.timeline : [
+    { label: "Diterima", done: true, time: order.created_at },
+    { label: "Dicuci", done: false },
+    { label: "Drying", done: false },
+    { label: "Finishing", done: false },
+    { label: "Diambil", done: false },
+  ];
+  const doneCount = timeline.filter((step) => step.done).length;
+  const progress = Math.max(0, Math.min(100, timeline.length > 1 ? ((doneCount - 1) / (timeline.length - 1)) * 100 : 0));
+
+  document.querySelector("#tracking-timeline").innerHTML = `
+    <div class="nota-progress-line"><i style="width:${progress}%"></i></div>
+    ${timeline.map((step) => `
+      <div class="nota-progress-step ${step.done ? "done" : ""}">
+        <div class="nota-step-dot">${timelineIcon(step.label)}</div>
         <strong>${safeText(step.label)}</strong>
-        <small>${step.done ? fmtDate(step.time) : "Menunggu update"}</small>
+        <span>${step.done ? fmtDate(step.time) : "Pending"}</span>
       </div>
+    `).join("")}
+  `;
+}
+
+function renderOrderMeta(order) {
+  document.querySelector("#order-meta").innerHTML = `
+    <div><span>▣</span><div><p>Tanggal Order</p><strong>${plainDate(order.created_at)}</strong></div></div>
+    <div><span>◷</span><div><p>Estimasi Selesai</p><strong>${plainDate(order.estimated_done_at || order.estimated_at)}</strong></div></div>
+    <div><span>◎</span><div><p>Lokasi</p><strong>${safeText(order.location || "Balikpapan")}</strong></div></div>
+    <div><span>▤</span><div><p>Metode Pembayaran</p><strong class="nota-payment-state ${paymentClass(order.payment_status)}">${safeText(order.payment_status || "-")}</strong></div></div>
+  `;
+}
+
+function renderCustomer(order) {
+  document.querySelector("#customer-details").innerHTML = `
+    <span>Nama</span><strong>${safeText(order.customer_name || "-")}</strong>
+    <span>No. WhatsApp</span><strong>${safeText(order.customer_phone || "-")}</strong>
+    <span>Alamat</span><strong>${safeText(order.customer_address || order.address || "-")}</strong>
+  `;
+}
+
+function renderItems(order) {
+  const items = order.items || [];
+  document.querySelector("#invoice-summary").innerHTML = `
+    <div class="nota-item-head">
+      <span>Item</span><span>Layanan</span><span>Qty</span><span>Harga Satuan</span><span>Subtotal</span>
     </div>
-  `).join("");
+    ${items.length ? items.map((item, index) => {
+      const qty = item.qty || 0;
+      const price = item.price || 0;
+      return `
+        <div class="nota-item-row">
+          <div class="nota-item-product">
+            <div class="nota-shoe-thumb ${index % 2 ? "dark" : ""}"></div>
+            <div>
+              <strong>${safeText(item.shoe_name || "Sepatu")}</strong>
+              <small>${safeText(item.note || item.size || "")}</small>
+            </div>
+          </div>
+          <span class="nota-service-pill">${safeText(item.service || "Layanan")}</span>
+          <span>${safeText(qty)} Pasang</span>
+          <span>${trackingRupiah.format(price)}</span>
+          <strong>${trackingRupiah.format(price * qty)}</strong>
+        </div>
+      `;
+    }).join("") : `<div class="empty-state">Item layanan belum tersedia.</div>`}
+  `;
+}
+
+function renderPaymentSummary(order) {
+  const subtotal = (order.items || []).reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 0)), 0);
+  const total = order.total_price || subtotal;
+  const discount = Math.max(0, subtotal - total);
+
+  document.querySelector("#payment-summary").innerHTML = `
+    <div class="payment-line"><span>Subtotal</span><strong>${trackingRupiah.format(subtotal || total)}</strong></div>
+    <div class="payment-line"><span>Diskon</span><strong class="danger">${discount ? `- ${trackingRupiah.format(discount)}` : trackingRupiah.format(0)}</strong></div>
+    <div class="payment-line total"><span>Total</span><strong>${trackingRupiah.format(total)}</strong></div>
+    <div class="payment-grand"><span>Total yang harus dibayar</span><strong>${trackingRupiah.format(total)}</strong></div>
+  `;
 }
 
 function renderMedia(order) {
   const media = order.media && order.media.length ? order.media : [];
-  document.querySelector("#tracking-media").innerHTML = media.length
-    ? media.map((item) => `<figure><img src="${safeText(item.url)}" alt="${safeText(item.type)}"><figcaption>${safeText(item.type)}</figcaption></figure>`).join("")
-    : `<div class="empty-state">Foto before/after belum tersedia.</div>`;
+  if (!media.length) {
+    document.querySelector("#tracking-media").innerHTML = `<div class="empty-state">Foto before/after belum tersedia.</div>`;
+    return;
+  }
+
+  const before = media.filter((item) => String(item.type || "").toLowerCase().includes("before"));
+  const after = media.filter((item) => String(item.type || "").toLowerCase().includes("after"));
+  const fallbackBefore = before.length ? before : media.slice(0, Math.ceil(media.length / 2));
+  const fallbackAfter = after.length ? after : media.slice(Math.ceil(media.length / 2));
+  const group = (title, list) => `
+    <div class="nota-media-group">
+      <strong>${title}</strong>
+      <div>
+        ${list.slice(0, 5).map((item) => `<figure><img src="${safeText(item.url)}" alt="${safeText(item.type || title)}"><figcaption>${safeText(item.label || item.type || title)}</figcaption></figure>`).join("")}
+      </div>
+    </div>
+  `;
+  document.querySelector("#tracking-media").innerHTML = `${group("Before", fallbackBefore)}${group("After", fallbackAfter)}`;
 }
 
 function refreshOrderView(order) {
   currentOrder = order;
+  const [title, body] = statusMessage(order);
   document.title = `${order.invoice_number} - Zolix`;
   document.querySelector("#invoice-title").textContent = order.invoice_number;
-  document.querySelector("#customer-line").textContent = `${order.customer_name} - ${order.customer_phone}`;
+  document.querySelector("#invoice-subtitle").textContent = order.invoice_number;
   document.querySelector("#tracking-status").innerHTML = badge(order.status);
-  document.querySelector("#whatsapp-link").href = `https://wa.me/${String(order.customer_phone || "").replace(/\D/g, "")}`;
-  renderOverview(order);
+  document.querySelector("#whatsapp-link").href = whatsappUrl(order);
+  document.querySelector("#confirm-payment-link").href = whatsappUrl(order, `Halo ZOLIX, saya sudah melakukan pembayaran untuk nota ${order.invoice_number}.`);
+  document.querySelector("#status-message-title").textContent = title;
+  document.querySelector("#status-message-body").textContent = body;
   renderTimeline(order);
-  renderInvoiceSummary(order);
+  renderOrderMeta(order);
+  renderCustomer(order);
+  renderItems(order);
+  renderPaymentSummary(order);
   renderSelfPayment(order);
   renderMedia(order);
 }
@@ -136,9 +214,8 @@ async function loadTracking() {
   ]);
   if (!response.ok) {
     document.querySelector("#invoice-title").textContent = "Order tidak ditemukan";
-    document.querySelector("#customer-line").textContent = "Periksa kembali nomor invoice Anda.";
+    document.querySelector("#invoice-subtitle").textContent = "Periksa kembali nomor invoice Anda.";
     document.querySelector("#tracking-status").innerHTML = badge("Dibatalkan");
-    document.querySelector("#tracking-overview").innerHTML = "";
     return;
   }
   if (configResponse.ok) paymentConfig = await configResponse.json();
@@ -149,49 +226,45 @@ function renderSelfPayment(order) {
   const transfer = paymentConfig && paymentConfig.transfer ? paymentConfig.transfer : {};
   const cash = paymentConfig && paymentConfig.cash ? paymentConfig.cash : {};
   const qrisDisabled = paymentConfig && paymentConfig.qris_enabled === false;
-  const qrisPanel = order.payment_method === "QRIS" && (order.payment_qr_url || order.payment_qr_string) ? `
-    <div class="self-payment-result">
+  const qrisDetail = order.payment_method === "QRIS" && (order.payment_qr_url || order.payment_qr_string) ? `
+    <div class="nota-payment-detail">
       <strong>QRIS siap dibayar</strong>
       <span>Ref: ${safeText(order.payment_reference || "-")}</span>
       ${order.payment_qr_url ? `<img src="${safeText(order.payment_qr_url)}" alt="QRIS pembayaran">` : ""}
       ${order.payment_qr_string ? `<textarea readonly rows="3">${safeText(order.payment_qr_string)}</textarea>` : ""}
-      <button class="secondary-button" data-self-check-qris>Cek Status Pembayaran</button>
+      <button type="button" data-self-check-qris>Cek Status Pembayaran</button>
     </div>
   ` : "";
 
   document.querySelector("#self-payment").innerHTML = `
-    <div class="payment-method-grid">
-      <button class="payment-method-card ${order.payment_method === "QRIS" ? "active" : ""}" data-self-pay="QRIS" ${qrisDisabled ? "disabled" : ""}>
+    <button class="nota-method ${order.payment_method === "QRIS" ? "active" : ""}" data-self-pay="QRIS" ${qrisDisabled ? "disabled" : ""}>
+      <span class="method-icon">▦</span>
+      <span class="method-copy">
         <strong>QRIS</strong>
-        <span>${qrisDisabled ? "Belum dikonfigurasi" : "Bayar instan dengan QRIS"}</span>
-      </button>
-      <button class="payment-method-card ${order.payment_method === "Transfer" ? "active" : ""}" data-self-pay="Transfer">
-        <strong>Transfer</strong>
-        <span>${safeText(transfer.bank_name || "Transfer bank")}</span>
-      </button>
-      <button class="payment-method-card ${order.payment_method === "Cash" ? "active" : ""}" data-self-pay="Cash">
-        <strong>Cash</strong>
-        <span>Bayar di outlet</span>
-      </button>
-    </div>
-    ${qrisPanel}
-    ${order.payment_method === "Transfer" ? `
-      <div class="manual-payment-info">
-        <strong>${safeText(transfer.bank_name || "Transfer Bank")}</strong>
-        <span>No. Rekening</span>
-        <b>${safeText(transfer.account_number || "-")}</b>
-        <span>Atas Nama</span>
-        <b>${safeText(transfer.account_name || "Zolix Shoe Care")}</b>
-        <p>${safeText(transfer.instructions || "Transfer sesuai total invoice lalu kirim bukti pembayaran melalui WhatsApp.")}</p>
-      </div>
-    ` : ""}
-    ${order.payment_method === "Cash" ? `
-      <div class="manual-payment-info">
-        <strong>Cash</strong>
-        <p>${safeText(cash.instructions || "Bayar langsung di outlet saat pickup atau saat menyerahkan sepatu.")}</p>
-      </div>
-    ` : ""}
-    <p class="self-payment-note">Status saat ini: <strong>${safeText(order.payment_status || "-")}</strong></p>
+        <small>${qrisDisabled ? "Belum dikonfigurasi" : "Scan QR Code menggunakan aplikasi e-wallet atau mobile banking."}</small>
+        <em>Mudah & Instan</em>
+      </span>
+      ${order.payment_qr_url ? `<img class="method-qr" src="${safeText(order.payment_qr_url)}" alt="QRIS pembayaran">` : `<i class="method-qr-placeholder"></i>`}
+      <b>›</b>
+    </button>
+    <button class="nota-method ${order.payment_method === "Transfer" ? "active" : ""}" data-self-pay="Transfer">
+      <span class="method-icon">⌂</span>
+      <span class="method-copy">
+        <strong>Transfer Bank</strong>
+        <small>${safeText(transfer.bank_name || "Transfer ke rekening resmi ZOLIX Shoe Care")}<br>${safeText(transfer.account_number || "1234 5678 9012")}<br>${safeText(transfer.account_name || "ZOLIX SHOE CARE")}</small>
+      </span>
+      <b>›</b>
+    </button>
+    <button class="nota-method ${order.payment_method === "Cash" ? "active" : ""}" data-self-pay="Cash">
+      <span class="method-icon">◎</span>
+      <span class="method-copy">
+        <strong>Cash (Tunai)</strong>
+        <small>${safeText(cash.instructions || "Bayar tunai saat pengambilan sepatu di store ZOLIX Shoe Care.")}</small>
+        <em>Bayar saat ambil</em>
+      </span>
+      <b>›</b>
+    </button>
+    ${qrisDetail}
   `;
 }
 
@@ -221,9 +294,9 @@ async function selectSelfPayment(method) {
       });
       currentOrder = result.order;
     }
-    renderOverview(currentOrder);
-    renderInvoiceSummary(currentOrder);
+    renderPaymentSummary(currentOrder);
     renderSelfPayment(currentOrder);
+    renderOrderMeta(currentOrder);
   } catch (error) {
     alert(error.message || "Gagal memilih pembayaran");
   }
@@ -236,9 +309,9 @@ async function checkSelfQRIS() {
       invoice_number: currentOrder.invoice_number,
     });
     currentOrder = result.order;
-    renderOverview(currentOrder);
-    renderInvoiceSummary(currentOrder);
+    renderPaymentSummary(currentOrder);
     renderSelfPayment(currentOrder);
+    renderOrderMeta(currentOrder);
   } catch (error) {
     alert(error.message || "Gagal mengecek pembayaran");
   }
@@ -250,6 +323,8 @@ document.addEventListener("click", (event) => {
 
   const checkButton = event.target.closest("[data-self-check-qris]");
   if (checkButton) checkSelfQRIS();
+
+  if (event.target.closest("#download-nota")) window.print();
 });
 
 loadTracking();
