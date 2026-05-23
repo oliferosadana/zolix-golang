@@ -87,6 +87,10 @@ button {
   top: 0;
 }
 
+.sidebar-backdrop {
+  display: none;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -276,6 +280,28 @@ button {
   width: 104px;
   height: auto;
   object-fit: contain;
+}
+
+.menu-button {
+  display: none;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: var(--shadow);
+}
+
+.menu-button span {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text);
 }
 
 .icon-button {
@@ -1554,7 +1580,43 @@ input:focus, select:focus, textarea:focus {
   }
 
   .sidebar {
-    display: none;
+    position: fixed;
+    z-index: 70;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(310px, calc(100vw - 48px));
+    min-height: 100vh;
+    display: flex;
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+    box-shadow: 16px 0 42px rgba(0, 0, 0, 0.18);
+    overflow-y: auto;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    display: block;
+    border: 0;
+    background: rgba(0, 0, 0, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .main {
@@ -1564,6 +1626,15 @@ input:focus, select:focus, textarea:focus {
 
   .mobile-brand {
     display: block;
+    margin-right: 0;
+  }
+
+  .menu-button {
+    display: flex;
+  }
+
+  .topbar {
+    justify-content: flex-start;
   }
 
   .hero-row, .toolbar {

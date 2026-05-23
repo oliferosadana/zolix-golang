@@ -352,6 +352,7 @@ function setView(view) {
   document.querySelectorAll(".view").forEach((node) => node.classList.remove("active-view"));
   document.querySelector(`#${view}-view`).classList.add("active-view");
   document.querySelectorAll(".nav-item").forEach((node) => node.classList.toggle("active", node.dataset.view === view));
+  closeSidebar();
   const titles = {
     dashboard: ["Dashboard", "Ringkasan operasional ZOLIX Shoe Care hari ini."],
     orders: ["List Order", "Kelola semua order dengan mudah dan cepat."],
@@ -364,6 +365,16 @@ function setView(view) {
   };
   document.querySelector("#page-title").textContent = titles[view][0];
   document.querySelector("#page-subtitle").textContent = titles[view][1];
+}
+
+function openSidebar() {
+  document.body.classList.add("sidebar-open");
+  document.querySelector("#menu-button").setAttribute("aria-expanded", "true");
+}
+
+function closeSidebar() {
+  document.body.classList.remove("sidebar-open");
+  document.querySelector("#menu-button").setAttribute("aria-expanded", "false");
 }
 
 function openDrawer(orderID) {
@@ -567,6 +578,11 @@ async function uploadMedia(event, uploadForm) {
 }
 
 document.addEventListener("click", (event) => {
+  const menuButton = event.target.closest("#menu-button");
+  if (menuButton) openSidebar();
+
+  if (event.target.closest("#sidebar-backdrop")) closeSidebar();
+
   const viewButton = event.target.closest("[data-view]");
   if (viewButton) setView(viewButton.dataset.view);
 
@@ -617,6 +633,9 @@ document.querySelector("#service-select").addEventListener("change", (event) => 
 });
 document.querySelector("#drawer-close").addEventListener("click", closeDrawer);
 document.querySelector("#drawer-x").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeSidebar();
+});
 
 document.querySelector("#login-form").addEventListener("submit", login);
 document.querySelector("#logout-button").addEventListener("click", logout);

@@ -23,7 +23,7 @@
       </form>
     </section>
     <div id="app">
-      <aside class="sidebar">
+      <aside class="sidebar" id="admin-sidebar">
         <div class="brand">
           <img class="brand-logo" src="/assets/logo.png" alt="Zolix Shoe Care">
         </div>
@@ -57,9 +57,15 @@
           <span class="chevron">⌄</span>
         </div>
       </aside>
+      <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="Tutup menu"></button>
 
       <main class="main">
         <header class="topbar">
+          <button class="menu-button" id="menu-button" type="button" aria-label="Buka menu" aria-controls="admin-sidebar" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
           <img class="mobile-brand" src="/assets/logo.png" alt="Zolix Shoe Care">
           <button class="secondary-button logout-button" id="logout-button">Logout</button>
           <button class="icon-button" aria-label="Notifikasi"><span>♧</span><i></i></button>
