@@ -2147,8 +2147,8 @@ input:focus, select:focus, textarea:focus {
 
 .nota-media-group > div {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .nota-media figure {
@@ -2156,12 +2156,29 @@ input:focus, select:focus, textarea:focus {
   min-width: 0;
 }
 
+.nota-photo-button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  padding: 0;
+  display: block;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
 .nota-media img {
   width: 100%;
-  aspect-ratio: 1.2 / 1;
-  border-radius: 6px;
+  aspect-ratio: 1.35 / 1;
+  border-radius: 8px;
   object-fit: cover;
   background: #f8f9fa;
+  display: block;
+  transition: transform 160ms ease;
+}
+
+.nota-photo-button:hover img {
+  transform: scale(1.03);
 }
 
 .nota-media figcaption {
@@ -2170,6 +2187,77 @@ input:focus, select:focus, textarea:focus {
   font-size: 10px;
   line-height: 14px;
   text-align: center;
+}
+
+.photo-modal-open {
+  overflow: hidden;
+}
+
+.nota-photo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+}
+
+.nota-photo-modal.open {
+  display: flex;
+}
+
+.nota-photo-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(10, 10, 10, 0.72);
+}
+
+.nota-photo-dialog {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: calc(100vh - 44px);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  padding: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.nota-photo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nota-photo-head strong {
+  color: #0a0a0a;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 900;
+}
+
+.nota-photo-head button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0a0a0a;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.nota-photo-dialog img {
+  width: 100%;
+  max-height: calc(100vh - 128px);
+  border-radius: 8px;
+  object-fit: contain;
+  background: #f8f9fa;
 }
 
 .nota-payment-summary {
@@ -2650,12 +2738,25 @@ input:focus, select:focus, textarea:focus {
   }
 
   .nota-media-group > div {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .nota-media figcaption {
-    font-size: 8px;
+    font-size: 9px;
+  }
+
+  .nota-photo-modal {
+    padding: 12px;
+  }
+
+  .nota-photo-dialog {
+    max-height: calc(100vh - 24px);
+    padding: 10px;
+  }
+
+  .nota-photo-dialog img {
+    max-height: calc(100vh - 104px);
   }
 
   .payment-grand strong {

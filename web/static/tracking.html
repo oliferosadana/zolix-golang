@@ -112,6 +112,17 @@
       </section>
     </main>
 
+    <div class="nota-photo-modal" id="photo-modal" aria-hidden="true">
+      <button class="nota-photo-backdrop" type="button" data-close-photo aria-label="Tutup preview foto"></button>
+      <div class="nota-photo-dialog" role="dialog" aria-modal="true" aria-labelledby="photo-modal-title">
+        <div class="nota-photo-head">
+          <strong id="photo-modal-title">Preview Foto</strong>
+          <button type="button" data-close-photo aria-label="Tutup preview foto">&#215;</button>
+        </div>
+        <img id="photo-modal-img" src="" alt="">
+      </div>
+    </div>
+
     <script src="/static/tracking.js"></script>
   </body>
 </html>

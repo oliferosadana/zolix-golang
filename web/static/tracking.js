@@ -204,11 +204,45 @@ function renderMedia(order) {
     <div class="nota-media-group">
       <strong>${title}</strong>
       <div>
-        ${list.slice(0, 5).map((item) => `<figure><img src="${safeText(item.url)}" alt="${safeText(item.type || title)}"><figcaption>${safeText(item.label || item.type || title)}</figcaption></figure>`).join("")}
+        ${list.slice(0, 5).map((item) => {
+          const label = item.label || item.type || title;
+          return `
+            <figure>
+              <button class="nota-photo-button" type="button" data-preview-photo="${safeText(item.url)}" data-preview-title="${safeText(label)}">
+                <img src="${safeText(item.url)}" alt="${safeText(label)}">
+              </button>
+              <figcaption>${safeText(label)}</figcaption>
+            </figure>
+          `;
+        }).join("")}
       </div>
     </div>
   `;
   document.querySelector("#tracking-media").innerHTML = `${group("Before", fallbackBefore)}${group("After", fallbackAfter)}`;
+}
+
+function openPhotoPreview(url, title) {
+  const modal = document.querySelector("#photo-modal");
+  const image = document.querySelector("#photo-modal-img");
+  const heading = document.querySelector("#photo-modal-title");
+  if (!modal || !image || !heading) return;
+  image.src = url;
+  image.alt = title || "Preview foto";
+  heading.textContent = title || "Preview Foto";
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("photo-modal-open");
+}
+
+function closePhotoPreview() {
+  const modal = document.querySelector("#photo-modal");
+  const image = document.querySelector("#photo-modal-img");
+  if (!modal || !image) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  image.src = "";
+  image.alt = "";
+  document.body.classList.remove("photo-modal-open");
 }
 
 function refreshOrderView(order) {
@@ -343,6 +377,11 @@ async function checkSelfQRIS() {
 }
 
 document.addEventListener("click", (event) => {
+  const photoButton = event.target.closest("[data-preview-photo]");
+  if (photoButton) openPhotoPreview(photoButton.dataset.previewPhoto, photoButton.dataset.previewTitle);
+
+  if (event.target.closest("[data-close-photo]")) closePhotoPreview();
+
   const paymentButton = event.target.closest("[data-self-pay]");
   if (paymentButton && !paymentButton.disabled) selectSelfPayment(paymentButton.dataset.selfPay);
 
@@ -350,6 +389,10 @@ document.addEventListener("click", (event) => {
   if (checkButton) checkSelfQRIS();
 
   if (event.target.closest("#download-nota")) window.print();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closePhotoPreview();
 });
 
 loadTracking();
