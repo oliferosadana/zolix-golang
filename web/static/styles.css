@@ -1575,8 +1575,15 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 1100px) {
+  body {
+    overflow-x: hidden;
+  }
+
   #app {
     display: block;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   .sidebar {
@@ -1622,6 +1629,8 @@ input:focus, select:focus, textarea:focus {
   .main {
     padding: 0 16px 96px;
     max-width: none;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .mobile-brand {
@@ -1650,6 +1659,11 @@ input:focus, select:focus, textarea:focus {
   .hero-row, .toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .hero-row {
+    width: 100%;
+    max-width: 100%;
   }
 
   .toolbar .search,
@@ -1730,8 +1744,8 @@ input:focus, select:focus, textarea:focus {
   }
 
   .hero-row {
-    margin-top: 14px;
-    gap: 10px;
+    margin-top: 10px;
+    gap: 8px;
   }
 
   .hero-row > div:first-child {
@@ -1756,22 +1770,29 @@ input:focus, select:focus, textarea:focus {
 
   .toolbar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+    align-items: start;
+    justify-items: start;
+    width: 100%;
   }
 
   .toolbar .search {
     grid-column: 1 / -1;
-    height: 42px;
+    height: 40px;
     padding: 0 12px;
     flex-basis: auto;
   }
 
   .toolbar .primary-button,
   .toolbar .secondary-button {
-    height: 40px;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    height: 38px;
     padding: 0 10px;
     font-size: 12px;
+    justify-self: start;
   }
 
   #filter-button {
@@ -1779,7 +1800,7 @@ input:focus, select:focus, textarea:focus {
   }
 
   .panel-head {
-    padding: 16px;
+    padding: 14px;
   }
 
   .cards-list,
@@ -1789,7 +1810,21 @@ input:focus, select:focus, textarea:focus {
   .payment-list,
   .activity-list,
   .order-form {
-    padding: 16px;
+    padding: 14px;
+  }
+
+  .stats-grid {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .dashboard-grid,
+  .payment-dashboard {
+    gap: 12px;
   }
 
   .payment-stat-card,
@@ -1855,7 +1890,8 @@ input:focus, select:focus, textarea:focus {
   }
 
   .hero-row {
-    margin-top: 12px;
+    margin-top: 9px;
+    gap: 7px;
   }
 
   h1 {
@@ -1870,6 +1906,13 @@ input:focus, select:focus, textarea:focus {
     min-width: 0;
     width: 100%;
     padding: 0 12px;
+  }
+
+  .toolbar .primary-button,
+  .toolbar .secondary-button {
+    width: auto;
+    height: 36px;
+    padding: 0 10px;
   }
 
   .topbar .logout-button {
