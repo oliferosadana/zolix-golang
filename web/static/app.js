@@ -440,27 +440,45 @@ async function deleteOrder(orderID) {
   await load();
 }
 
-async function uploadMedia(event) {
+async function uploadMedia(event, uploadForm) {
   event.preventDefault();
-  const orderID = event.currentTarget.dataset.uploadOrder;
-  const form = new FormData(event.currentTarget);
+  const formElement = uploadForm || event.target.closest("[data-upload-order]");
+  if (!formElement) return;
+  const orderID = formElement.dataset.uploadOrder;
+  const submitButton = formElement.querySelector("button[type='submit']");
+  const originalLabel = submitButton ? submitButton.textContent : "";
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Mengupload...";
+  }
+  const form = new FormData(formElement);
   form.append("order_id", orderID);
-  const response = await fetch("/api/v1/upload", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${state.token}` },
-    body: form,
-  });
-  if (response.status === 401) {
-    logout();
-    return;
+  try {
+    const response = await fetch("/api/v1/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${state.token}` },
+      body: form,
+    });
+    if (response.status === 401) {
+      logout();
+      return;
+    }
+    if (!response.ok) {
+      const error = await response.json();
+      alert(error.error || "Upload gagal");
+      return;
+    }
+    formElement.reset();
+    await load();
+    openDrawer(orderID);
+  } catch (error) {
+    alert(error.message || "Upload gagal");
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalLabel;
+    }
   }
-  if (!response.ok) {
-    const error = await response.json();
-    alert(error.error || "Upload gagal");
-    return;
-  }
-  await load();
-  openDrawer(orderID);
 }
 
 document.addEventListener("click", (event) => {
@@ -503,7 +521,7 @@ document.querySelector("#search-input").addEventListener("input", () => {
 document.querySelector("#order-form").addEventListener("submit", createOrder);
 document.addEventListener("submit", (event) => {
   const uploadForm = event.target.closest("[data-upload-order]");
-  if (uploadForm) uploadMedia(event);
+  if (uploadForm) uploadMedia(event, uploadForm);
 });
 document.querySelector("#service-select").addEventListener("change", (event) => {
   const option = event.target.selectedOptions[0];
