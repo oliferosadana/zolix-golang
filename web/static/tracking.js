@@ -125,29 +125,54 @@ function renderCustomer(order) {
 
 function renderItems(order) {
   const items = order.items || [];
+  const subtotal = items.reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 0)), 0);
+  const itemCount = items.reduce((sum, item) => sum + (item.qty || 0), 0);
   document.querySelector("#invoice-summary").innerHTML = `
+    <div class="nota-item-overview">
+      <div>
+        <span>Total Item</span>
+        <strong>${safeText(itemCount || items.length)} pasang</strong>
+      </div>
+      <div>
+        <span>Total Layanan</span>
+        <strong>${trackingRupiah.format(order.total_price || subtotal)}</strong>
+      </div>
+    </div>
     <div class="nota-item-head">
-      <span>Item</span><span>Layanan</span><span>Qty</span><span>Harga Satuan</span><span>Subtotal</span>
+      <span>Detail Item</span><span>Layanan</span><span>Qty</span><span>Harga Satuan</span><span>Subtotal</span>
     </div>
     ${items.length ? items.map((item, index) => {
       const qty = item.qty || 0;
       const price = item.price || 0;
+      const subtotal = price * qty;
+      const details = [
+        item.shoe_name ? `Nama sepatu: ${item.shoe_name}` : "",
+        item.service ? `Treatment: ${item.service}` : "",
+        qty ? `Jumlah: ${qty} pasang` : "",
+      ].filter(Boolean);
       return `
         <div class="nota-item-row">
           <div class="nota-item-product">
             <div class="nota-shoe-thumb ${index % 2 ? "dark" : ""}"></div>
             <div>
+              <em>Item ${index + 1}</em>
               <strong>${safeText(item.shoe_name || "Sepatu")}</strong>
-              <small>${safeText(item.note || item.size || "")}</small>
+              <small>${details.map(safeText).join(" / ")}</small>
             </div>
           </div>
-          <span class="nota-service-pill">${safeText(item.service || "Layanan")}</span>
-          <span>${safeText(qty)} Pasang</span>
-          <span>${trackingRupiah.format(price)}</span>
-          <strong>${trackingRupiah.format(price * qty)}</strong>
+          <span data-label="Layanan"><i class="nota-service-pill">${safeText(item.service || "Layanan")}</i></span>
+          <span data-label="Qty">${safeText(qty)} Pasang</span>
+          <span data-label="Harga Satuan">${trackingRupiah.format(price)}</span>
+          <strong data-label="Subtotal">${trackingRupiah.format(subtotal)}</strong>
         </div>
       `;
     }).join("") : `<div class="empty-state">Item layanan belum tersedia.</div>`}
+    ${order.notes ? `
+      <div class="nota-item-notes">
+        <span>Catatan pengerjaan</span>
+        <p>${safeText(order.notes)}</p>
+      </div>
+    ` : ""}
   `;
 }
 

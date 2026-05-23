@@ -1984,7 +1984,40 @@ input:focus, select:focus, textarea:focus {
 }
 
 .nota-items {
+  display: grid;
+  gap: 10px;
   min-width: 0;
+}
+
+.nota-item-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.nota-item-overview > div {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8f9fa;
+  padding: 12px;
+}
+
+.nota-item-overview span {
+  display: block;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 700;
+}
+
+.nota-item-overview strong {
+  display: block;
+  margin-top: 5px;
+  color: #0a0a0a;
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 900;
 }
 
 .nota-item-head,
@@ -2005,13 +2038,17 @@ input:focus, select:focus, textarea:focus {
 }
 
 .nota-item-row {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
   padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
   font-size: 12px;
 }
 
-.nota-item-row:last-child {
-  border-bottom: 0;
+.nota-item-row > span,
+.nota-item-row > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .nota-item-product {
@@ -2039,9 +2076,21 @@ input:focus, select:focus, textarea:focus {
   overflow-wrap: anywhere;
 }
 
+.nota-item-product em {
+  display: block;
+  margin-bottom: 3px;
+  color: #65a30d;
+  font-size: 10px;
+  line-height: 13px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .nota-item-product small {
   color: #6b7280;
   margin-top: 4px;
+  line-height: 16px;
 }
 
 .nota-service-pill,
@@ -2055,6 +2104,29 @@ input:focus, select:focus, textarea:focus {
   font-size: 10px;
   font-style: normal;
   font-weight: 800;
+}
+
+.nota-item-notes {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 12px;
+}
+
+.nota-item-notes span {
+  display: block;
+  color: #6b7280;
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.nota-item-notes p {
+  margin-top: 5px;
+  color: #0a0a0a;
+  font-size: 13px;
+  line-height: 19px;
 }
 
 .nota-media {
@@ -2478,25 +2550,49 @@ input:focus, select:focus, textarea:focus {
     gap: 12px 8px;
   }
 
-  .nota-item-head,
-  .nota-item-row {
-    grid-template-columns: minmax(128px, 1.3fr) 70px 42px 64px;
-    gap: 7px;
+  .nota-item-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .nota-item-head span:nth-child(4),
-  .nota-item-row > span:nth-child(4) {
-    display: none;
+  .nota-item-overview > div,
+  .nota-item-notes {
+    padding: 9px;
+  }
+
+  .nota-item-overview strong {
+    font-size: 13px;
+    line-height: 17px;
   }
 
   .nota-item-head {
-    padding: 8px;
-    font-size: 9px;
+    display: none;
   }
 
   .nota-item-row {
-    padding: 8px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    align-items: stretch;
+    padding: 10px;
     font-size: 10px;
+  }
+
+  .nota-item-row > span,
+  .nota-item-row > strong {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 8px;
+    text-align: right;
+  }
+
+  .nota-item-row > span::before,
+  .nota-item-row > strong::before {
+    content: attr(data-label);
+    color: #6b7280;
+    text-align: left;
+    font-weight: 800;
   }
 
   .nota-shoe-thumb {
@@ -2517,6 +2613,11 @@ input:focus, select:focus, textarea:focus {
   .nota-service-pill {
     padding: 3px 6px;
     font-size: 9px;
+  }
+
+  .nota-item-notes p {
+    font-size: 11px;
+    line-height: 16px;
   }
 
   .nota-media {
@@ -2606,9 +2707,8 @@ input:focus, select:focus, textarea:focus {
     gap: 7px;
   }
 
-  .nota-item-head,
   .nota-item-row {
-    grid-template-columns: minmax(132px, 1fr) 70px 34px 58px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .nota-media {
